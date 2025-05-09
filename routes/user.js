@@ -40,6 +40,7 @@ router.post('/favorites', async (req,res,next) => {
  */
 router.get('/favorites', async (req,res,next) => {
   try{
+    res.send("Im Alive");
     const user_id = req.session.user_id;
     let favorite_recipes = {};
     const recipes_id = await user_utils.getFavoriteRecipes(user_id);
