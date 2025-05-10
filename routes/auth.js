@@ -34,6 +34,7 @@ router.post("/Register", async (req, res, next) => {
       '${user_details.country}', '${hash_password}', '${user_details.email}')`
     );
     res.status(201).send({ message: "user created", success: true });
+    console.log("user created: " + user_details.username);
   } catch (error) {
     next(error);
   }
@@ -42,11 +43,9 @@ router.post("/Register", async (req, res, next) => {
 router.post("/Login", async (req, res, next) => {
   try {
     // check that username exists
-    const users = await DButils.execQuery(
-      "SELECT * FROM users"
-    );
+    const users = await DButils.execQuery("SELECT * FROM users");
     const user = users.find((u) => u.username === req.body.username);
-    if (!user){
+    if (!user) {
       throw { status: 401, message: "Username or Password incorrect" };
     }
     // check that the password is correct
