@@ -20,7 +20,7 @@ tags:
   - name: FamilyRecipes
     description: Traditional family recipes
 paths:
-  /register:
+  /Register:
     post:
       tags:
         - Auth
@@ -37,7 +37,7 @@ paths:
           description: User created
         "409":
           description: Username already exists
-  /login:
+  /Login:
     post:
       tags:
         - Auth
@@ -62,7 +62,7 @@ paths:
           description: Invalid credentials
         "404":
           description: User not found
-  /logout:
+  /Logout:
     post:
       tags:
         - Auth
@@ -436,8 +436,8 @@ components:
       required:
         - country
         - email
-        - firstName
-        - lastName
+        - firstname
+        - lastname
         - password
         - username
       type: object
@@ -449,10 +449,10 @@ components:
           type: string
           description: Username must be 3-8 characters long and contain only English letters.
           example: Ilaygav
-        first_name:
+        firstname:
           type: string
           example: Ilay
-        last_name:
+        lastname:
           type: string
           example: Gavrilenko
         country:
@@ -559,8 +559,6 @@ components:
         prep_time_minutes:
           type: integer
           example: 45
-        servings:
-          type: integer
         ingredients:
           type: array
           items:
@@ -576,9 +574,13 @@ components:
         is_gluten_free:
           type: boolean
           example: false
-        portions:
+        servings:
           type: integer
           example: 8
+        is_favorite:
+          type: boolean
+          example: false
+          default: false
     Ingredient:
       type: object
       properties:
