@@ -100,6 +100,24 @@ paths:
       responses:
         "204":
           description: Added to favorites
+  /users/favorite/{recipeID}:
+    delete:
+      tags:
+        - Users
+      summary: unmarks specific from favorites of user
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: recipie unique id has been removed from favorites
+        "400":
+          description: Invalid data provided
+        "404":
+          description: recipe not makred
   /users/recipes:
     get:
       tags:
@@ -176,7 +194,7 @@ paths:
         "404":
           description: User or recipe not found
 
-  /users/last-watched:
+  /users/WatchedRecipes:
     get:
       tags:
         - Users
@@ -190,6 +208,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RecipePreview"
+    post:
+      tags:
+        - Users
+      summary: Add a recipe to the viewed list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipePreview"
+        required: true
+      responses:
+        "204":
+          description: Added to viewed
+
   /users/family-recipes:
     get:
       tags:

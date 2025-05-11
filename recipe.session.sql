@@ -58,10 +58,10 @@ CREATE TABLE FavoriteRecipes(
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
 );
-CREATE TABLE LastWatchedRecipes(
+CREATE TABLE WatchedRecipes(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
-  last_watched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  watchedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)

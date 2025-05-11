@@ -151,5 +151,46 @@ router.get("/favorites", async (req, res, next) => {
     next(error);
   }
 });
+/**
+ * This path removes the recipe from the favorites list of the logged-in user
+ */
+router.delete("/favorites/:recipeId", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipe_id = req.params.recipeId;
+    await user_utils.removeRecipeFromFavorites(user_id, recipe_id);
+    res
+      .status(200)
+      .send({ message: `Recipe with id ${recipe_id} unmakred as favorite` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/WatchedRecipes", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const last_watched = await user_utils.getWatchedRecipes(user_id);
+    if (last_watched.length === 0) {
+      throw {
+        status: 404,
+        message: "No recipes found for this user",
+      };
+    }
+    res.status(200).json(last_watched);
+  } catch (err) {
+    next(err);
+  }
+});
+router.post("/WatchedRecipes", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipe_id = req.body.recipeId;
+    await user_utils.markAsWatched(user_id, recipe_id);
+    res.status(200).send("The Recipe successfully saved as watched");
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

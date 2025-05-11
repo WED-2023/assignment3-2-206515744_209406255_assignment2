@@ -5,6 +5,11 @@ async function markAsFavorite(user_id, recipe_id) {
     `insert into FavoriteRecipes values ('${user_id}',${recipe_id})`
   );
 }
+async function removeRecipeFromFavorites(user_id, recipe_id) {
+  await DButils.execQuery(
+    `delete from FavoriteRecipes where user_id='${user_id}' and recipe_id=${recipe_id}`
+  );
+}
 
 async function getFavoriteRecipes(user_id) {
   const recipes_id = await DButils.execQuery(
@@ -59,9 +64,24 @@ async function removeRecipeFromDB(user_id, recipe_id) {
   );
 }
 
+async function getWatchedRecipes(user_id) {
+  const recipes_id = await DButils.execQuery(
+    `select recipe_id from WatchedRecipes where user_id='${user_id}'`
+  );
+  return recipes_id;
+}
+async function markAsWatched(user_id, recipe_id) {
+    await DButils.execQuery(
+        `insert into WatchedRecipes values ('${user_id}',${recipe_id})`
+    );
+    }
+
 exports.markAsFavorite = markAsFavorite;
 exports.getFavoriteRecipes = getFavoriteRecipes;
 exports.removeRecipeFromDB = removeRecipeFromDB;
 exports.addRecipeForUser = addRecipeForUser;
 exports.getUserRecipes = getUserRecipes;
 exports.getUserRecipe = getUserRecipe;
+exports.removeRecipeFromFavorites = removeRecipeFromFavorites;
+exports.getWatchedRecipes = getWatchedRecipes;
+exports.markAsWatched = markAsWatched;
