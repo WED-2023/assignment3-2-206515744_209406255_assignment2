@@ -1,6 +1,6 @@
 USE grandma_recipes_db;
 
-CREATE TABLE users (
+CREATE TABLE Users (
   user_id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   firstname VARCHAR(50) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE users (
   profilePic TEXT
 );
 
-CREATE TABLE recipes (
+CREATE TABLE Recipes (
   recipe_id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   title VARCHAR(255),
@@ -23,11 +23,10 @@ CREATE TABLE recipes (
   instructions TEXT,       -- JSON string
   is_vegan BOOLEAN,
   is_gluten_free BOOLEAN,
-  is_favorite BOOLEAN,
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE family_recipes (
+CREATE TABLE FamilyRecipes (
   recipe_id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   title VARCHAR(255),
@@ -43,11 +42,18 @@ CREATE TABLE family_recipes (
   step_images TEXT,
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
-CREATE TABLE meal_plan (
+CREATE TABLE MealPlan (
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   position INT,
   progress FLOAT CHECK (progress >= 0 AND progress <= 1),
+  PRIMARY KEY (user_id, recipe_id),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+);
+CREATE TABLE FavoriteRecipes(
+  user_id INT NOT NULL,
+  recipe_id INT NOT NULL,
   PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)

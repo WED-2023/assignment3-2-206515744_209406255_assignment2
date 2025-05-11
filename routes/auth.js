@@ -30,7 +30,7 @@ router.post("/Register", async (req, res, next) => {
     );
 
     await DButils.execQuery(
-      `INSERT INTO users (username, firstname, lastname, country, password, email) VALUES ('${user_details.username}', '${user_details.firstname}', '${user_details.lastname}',
+      `INSERT INTO Users (username, firstname, lastname, country, password, email) VALUES ('${user_details.username}', '${user_details.firstname}', '${user_details.lastname}',
       '${user_details.country}', '${hash_password}', '${user_details.email}')`
     );
     res.status(201).send({ message: "user created", success: true });
@@ -43,7 +43,7 @@ router.post("/Register", async (req, res, next) => {
 router.post("/Login", async (req, res, next) => {
   try {
     // check that username exists
-    const users = await DButils.execQuery("SELECT * FROM users");
+    const users = await DButils.execQuery("SELECT * FROM Users");
     const user = users.find((u) => u.username === req.body.username);
     if (!user) {
       throw { status: 401, message: "Username or Password incorrect" };

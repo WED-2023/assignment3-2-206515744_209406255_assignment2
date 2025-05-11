@@ -9,7 +9,7 @@ const recipe_utils = require("./utils/recipes_utils");
  */
 router.use(async function (req, res, next) {
   if (req.session && req.session.user_id) {
-    DButils.execQuery("SELECT user_id FROM users")
+    DButils.execQuery("SELECT user_id FROM Users")
       .then((users) => {
         if (users.find((x) => x.user_id === req.session.user_id)) {
           req.user_id = req.session.user_id;
@@ -37,7 +37,6 @@ router.post("/recipes", async (req, res, next) => {
       is_vegan,
       is_gluten_free,
       servings,
-      is_favorite = false,
     } = req.body;
 
     const fields = {
@@ -49,7 +48,6 @@ router.post("/recipes", async (req, res, next) => {
       instructions,
       is_vegan,
       is_gluten_free,
-      is_favorite,
     };
     if (
       Object.values(fields).some(
@@ -63,13 +61,13 @@ router.post("/recipes", async (req, res, next) => {
     }
 
     await DButils.execQuery(`
-      INSERT INTO recipes (
+      INSERT INTO Recipes (
         user_id, title, image_url, prep_time_minutes, servings,
-        ingredients, instructions, is_vegan, is_gluten_free, is_favorite
+        ingredients, instructions,likes, is_vegan, is_gluten_free
       ) VALUES (
         '${user_id}', '${title}', '${image_url}', '${prep_time_minutes}', '${servings}',
-        '${JSON.stringify(ingredients)}', '${JSON.stringify(instructions)}',
-          '${is_vegan ? 1 : 0}', '${is_gluten_free ? 1 : 0}', '${is_favorite ? 1 : 0}'      
+        '${JSON.stringify(ingredients)}', '${JSON.stringify(instructions)}',0,
+          '${is_vegan ? 1 : 0}', '${is_gluten_free ? 1 : 0}'      
           )
     `);
     res.status(201).send({ message: "Recipe created successfully" });
@@ -86,7 +84,7 @@ router.get("/recipes", async (req, res, next) => {
     const user_id = req.session.user_id;
     const recipes = await DButils.execQuery(`
       SELECT *
-      FROM recipes WHERE user_id=${user_id}
+      FROM Recipes WHERE user_id=${user_id}
     `);
     if (recipes.length === 0) {
       throw {

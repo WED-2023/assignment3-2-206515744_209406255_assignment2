@@ -577,10 +577,10 @@ components:
         servings:
           type: integer
           example: 8
-        is_favorite:
-          type: boolean
-          example: false
-          default: false
+        favorites:
+          type: integer
+          example: 12
+          default: 0
     Ingredient:
       type: object
       properties:
