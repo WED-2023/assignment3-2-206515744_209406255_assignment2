@@ -213,14 +213,23 @@ paths:
         - Users
       summary: Add a recipe to the viewed list
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecipePreview"
-        required: true
+              type: object
+              properties:
+                recipeId:
+                  type: integer
+              required:
+                - recipeId
       responses:
-        "204":
-          description: Added to viewed
+        "201":
+          description: Watched recipe recorded successfully
+        "400":
+          description: Invalid or missing recipe ID
+        "500":
+          description: Server error while recording watched recipe
 
   /users/family-recipes:
     get:

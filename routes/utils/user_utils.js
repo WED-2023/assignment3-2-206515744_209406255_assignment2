@@ -2,18 +2,21 @@ const DButils = require("./DButils");
 
 async function markAsFavorite(user_id, recipe_id) {
   await DButils.execQuery(
-    `insert into FavoriteRecipes values ('${user_id}',${recipe_id})`
+    `INSERT INTO FavoriteRecipes (user_id, recipe_id) VALUES (?, ?)`,
+    [user_id, recipe_id]
   );
 }
 async function removeRecipeFromFavorites(user_id, recipe_id) {
   await DButils.execQuery(
-    `delete from FavoriteRecipes where user_id='${user_id}' and recipe_id=${recipe_id}`
+    `DELETE FROM FavoriteRecipes WHERE user_id = ? AND recipe_id = ?`,
+    [user_id, recipe_id]
   );
 }
 
 async function getFavoriteRecipes(user_id) {
   const recipes_id = await DButils.execQuery(
-    `select recipe_id from FavoriteRecipes where user_id='${user_id}'`
+    `SELECT recipe_id FROM FavoriteRecipes WHERE user_id = ?`,
+    [user_id]
   );
   return recipes_id;
 }
@@ -35,20 +38,20 @@ async function addRecipeForUser(user_id, fields) {
   return result.insertId;
 }
 async function getUserRecipes(user_id) {
-  const recipes = await DButils.execQuery(`
-      SELECT *
-      FROM Recipes WHERE user_id=${user_id}
-    `);
+  const recipes = await DButils.execQuery(
+    `SELECT * FROM Recipes WHERE user_id = ?`,
+    [user_id]
+  );
   if (recipes.length === 0) {
     throw { status: 404, message: "No recipes found for this user" };
   }
   return recipes;
 }
 async function getUserRecipe(user_id, recipeId) {
-  const recipe = await DButils.execQuery(`
-      SELECT *
-      FROM Recipes WHERE user_id=${user_id} AND recipe_id=${recipeId}
-    `);
+  const recipe = await DButils.execQuery(
+    `SELECT * FROM Recipes WHERE user_id = ? AND recipe_id = ?`,
+    [user_id, recipeId]
+  );
   if (recipe.length === 0) {
     throw { status: 404, message: "No recipes found for this user" };
   }
@@ -57,24 +60,27 @@ async function getUserRecipe(user_id, recipeId) {
 
 async function removeRecipeFromDB(user_id, recipe_id) {
   await DButils.execQuery(
-    `delete from FavoriteRecipes where user_id='${user_id}' and recipe_id=${recipe_id}`
+    `DELETE FROM FavoriteRecipes WHERE user_id = ? AND recipe_id = ?`,
+    [user_id, recipe_id]
   );
   await DButils.execQuery(
-    `delete from Recipes where user_id='${user_id}' and recipe_id=${recipe_id}`
+    `DELETE FROM Recipes WHERE user_id = ? AND recipe_id = ?`,
+    [user_id, recipe_id]
   );
 }
 
 async function getWatchedRecipes(user_id) {
-  const recipes_id = await DButils.execQuery(
-    `select recipe_id from WatchedRecipes where user_id='${user_id}'`
+  return await DButils.execQuery(
+    `SELECT recipe_id FROM WatchedRecipes WHERE user_id = ?`,
+    [user_id]
   );
-  return recipes_id;
 }
 async function markAsWatched(user_id, recipe_id) {
-    await DButils.execQuery(
-        `insert into WatchedRecipes values ('${user_id}',${recipe_id})`
-    );
-    }
+  await DButils.execQuery(
+    `INSERT INTO WatchedRecipes (user_id, recipe_id) VALUES (?, ?)`,
+    [user_id, recipe_id]
+  );
+}
 
 exports.markAsFavorite = markAsFavorite;
 exports.getFavoriteRecipes = getFavoriteRecipes;
