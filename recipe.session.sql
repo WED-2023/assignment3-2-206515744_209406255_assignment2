@@ -66,3 +66,16 @@ CREATE TABLE WatchedRecipes(
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
 );
+CREATE TABLE Ingredients (
+  ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+Create TABLE RecipeIngredients (
+  recipe_id INT NOT NULL,
+  ingredient_id INT NOT NULL,
+  amount VARCHAR(50),
+  unit VARCHAR(50),
+  PRIMARY KEY (recipe_id, ingredient_id),
+  FOREIGN KEY (recipe_id) REFERENCES Recipes(recipe_id),
+  FOREIGN KEY (ingredient_id) REFERENCES Ingredients(ingredient_id)
+);
