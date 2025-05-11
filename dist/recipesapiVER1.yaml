@@ -158,27 +158,23 @@ paths:
           description: Invalid data provided
         "404":
           description: User not found
-    post:
+    delete:
       tags:
         - Users
-      summary: Create a new recipe and save it for user recipes
+      summary: Delete recipe from user recipes
       parameters:
-        - name: userId
+        - name: recipeID
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NewRecipe"
-        required: true
       responses:
-        "201":
-          description: Recipe created successfully
+        "200":
+          description: Recipe deleted successfully
         "400":
           description: Invalid recipe data
+        "404":
+          description: User or recipe not found
 
   /users/last-watched:
     get:

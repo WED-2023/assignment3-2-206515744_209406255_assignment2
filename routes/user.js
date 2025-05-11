@@ -3,6 +3,7 @@ var router = express.Router();
 const DButils = require("./utils/DButils");
 const user_utils = require("./utils/user_utils");
 const recipe_utils = require("./utils/recipes_utils");
+const { add } = require("nodemon/lib/rules");
 
 /**
  * Authenticate all incoming requests by middleware
@@ -26,7 +27,6 @@ router.use(async function (req, res, next) {
  */
 router.post("/recipes", async (req, res, next) => {
   try {
-  
     const user_id = req.session.user_id;
     const {
       title,
@@ -59,18 +59,12 @@ router.post("/recipes", async (req, res, next) => {
         message: "All fields are required and must not be empty.",
       };
     }
+    const id = await user_utils.addRecipeForUser(user_id, fields);
 
-    await DButils.execQuery(`
-      INSERT INTO Recipes (
-        user_id, title, image_url, prep_time_minutes, servings,
-        ingredients, instructions,likes, is_vegan, is_gluten_free
-      ) VALUES (
-        '${user_id}', '${title}', '${image_url}', '${prep_time_minutes}', '${servings}',
-        '${JSON.stringify(ingredients)}', '${JSON.stringify(instructions)}',0,
-          '${is_vegan ? 1 : 0}', '${is_gluten_free ? 1 : 0}'      
-          )
-    `);
-    res.status(201).send({ message: "Recipe created successfully" });
+    res
+      .status(201)
+      .send({ message: `Recipe with id ${id} created successfully` });
+    console.log(`Recipe ${id} created successfully`);
   } catch (err) {
     next(err);
   }
@@ -82,10 +76,7 @@ router.post("/recipes", async (req, res, next) => {
 router.get("/recipes", async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
-    const recipes = await DButils.execQuery(`
-      SELECT *
-      FROM Recipes WHERE user_id=${user_id}
-    `);
+    const recipes = await user_utils.getUserRecipes(user_id);
     if (recipes.length === 0) {
       throw {
         status: 404,
@@ -98,6 +89,37 @@ router.get("/recipes", async (req, res, next) => {
   }
 });
 
+/**
+ * this gets a specific recipe of the logged-in user
+ */
+router.get("/recipes/:recipeId", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipeId = req.params.recipeId;
+    const recipe = await user_utils.getUserRecipe(user_id, recipeId);
+    if (recipe.length === 0) {
+      throw {
+        status: 404,
+        message: "No recipes found for this user",
+      };
+    }
+    res.status(200).json(recipe[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+router.delete("/recipes/:recipeId", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipeId = req.params.recipeId;
+    await user_utils.removeRecipeFromDB(user_id, recipeId);
+    res
+      .status(200)
+      .send({ message: `Recipe with id ${recipeId} deleted successfully` });
+  } catch (err) {
+    next(err);
+  }
+});
 /**
  * This path gets body with recipeId and save this recipe in the favorites list of the logged-in user
  */
