@@ -9,7 +9,7 @@ router.get("/", (req, res) => res.send("im here"));
  * This path returns a full details of a recipe by its id
  */
 router.get("/random", async (req, res, next) => {
-  number = 3;
+  let number=3;
   try {
     if (req.query.number) {
       num = req.query.number;
@@ -18,7 +18,7 @@ router.get("/random", async (req, res, next) => {
       number = req.query.number;
     }
     res.locals.recipes = await recipes_utils.getRandomRecipeDetails(number);
-    addViewedInfo(req, res, next);
+    await addViewedInfo(req, res, next);
   } catch (error) {
     next(error);
   }
@@ -50,14 +50,12 @@ router.get("/search", async (req, res, next) => {
     if (diet) params.diet = diet;
     if (intolerances) params.intolerances = intolerances;
 
-    // const recipes = await recipes_utils.getSearchRecipeDetails(params, numberOfResults);
     res.locals.recipes = await recipes_utils.getSearchRecipeDetails(
       params,
       numberOfResults
     );
-    addViewedInfo(req, res, next);
+    await addViewedInfo(req, res, next);
 
-    // res.send(recipes); // need to check what do, in case that number of result is smaller then 5.
   } catch (error) {
     next(error);
   }
@@ -69,14 +67,14 @@ router.get("/:recipeId", async (req, res, next) => {
       res.locals.recipes = [
         await recipes_utils.getFullRecipeDetails(req.params.recipeId),
       ];
-      addViewedInfo(req, res, next);
+      await addViewedInfo(req, res, next);
     }
-    // const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
+    else{
     res.locals.recipes = [
       await recipes_utils.getRecipeDetails(req.params.recipeId),
     ];
-    addViewedInfo(req, res, next);
-    // res.send(recipe);
+    await addViewedInfo(req, res, next);
+  }
   } catch (error) {
     next(error);
   }
