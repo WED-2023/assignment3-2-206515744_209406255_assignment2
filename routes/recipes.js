@@ -9,13 +9,13 @@ router.get("/", (req, res) => res.send("im here"));
  * This path returns a full details of a recipe by its id
  */
 router.get("/random", async (req, res, next) => {
-  let number=3;
+  let number = 3;
   try {
     if (req.query.number) {
-      num = req.query.number;
+      const num = parseInt(req.query.number,10);
       if (num > 10 || num < 1)
         throw { status: 400, message: "number must be between 1 and 10." };
-      number = req.query.number;
+      number = num;
     }
     res.locals.recipes = await recipes_utils.getRandomRecipeDetails(number);
     await addViewedInfo(req, res, next);
@@ -55,7 +55,6 @@ router.get("/search", async (req, res, next) => {
       numberOfResults
     );
     await addViewedInfo(req, res, next);
-
   } catch (error) {
     next(error);
   }
@@ -68,13 +67,12 @@ router.get("/:recipeId", async (req, res, next) => {
         await recipes_utils.getFullRecipeDetails(req.params.recipeId),
       ];
       await addViewedInfo(req, res, next);
+    } else {
+      res.locals.recipes = [
+        await recipes_utils.getRecipeDetails(req.params.recipeId),
+      ];
+      await addViewedInfo(req, res, next);
     }
-    else{
-    res.locals.recipes = [
-      await recipes_utils.getRecipeDetails(req.params.recipeId),
-    ];
-    await addViewedInfo(req, res, next);
-  }
   } catch (error) {
     next(error);
   }

@@ -43,7 +43,7 @@ async function getFullRecipeDetails(recipe_id) {
   } = recipe_info.data;
   let { Instructions_steps, required_equipment } =
     extractInstructionsAndEquipment(analyzedInstructions);
-  noLinksSummary = replaceHref(summary);
+  let noLinksSummary = replaceHref(summary);
   let ingredients_details = extractIngredients(extendedIngredients);
   return {
     id: id,
@@ -64,7 +64,7 @@ async function getFullRecipeDetails(recipe_id) {
 
 async function getRandomRecipeDetails(number) {
   let recipe_info = await getRandomRecipeInformation(number);
-  recipes = [];
+  let recipes = [];
   for (let i = 0; i < number; i++) {
     let {
       id,
@@ -183,7 +183,7 @@ function extractInstructionsAndEquipment(Instructions) {
 }
 
 function extractIngredients(ingredients) {
-  ingredients_details = [];
+  let ingredients_details = [];
   if (ingredients.length) {
     ingredients.forEach((ingredient) => {
       ingredients_details.push({

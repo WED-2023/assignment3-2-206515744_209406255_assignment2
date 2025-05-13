@@ -16,6 +16,9 @@ router.use(async function (req, res, next) {
           req.user_id = req.session.user_id;
           next();
         }
+        else {
+          res.sendStatus(401);
+        }
       })
       .catch((err) => next(err));
   } else {
@@ -157,10 +160,6 @@ Add user's last view
 router.post("/my-recipes", async (req, res, next) => {
   try {
     console.log(req.body);
-    // parameters exists
-    // valid parameters
-    // username exists
-    // no need to check validation of the details on server side.
     let recipe_details = {
       picture: req.body.image,
       name: req.body.title,

@@ -399,6 +399,14 @@ paths:
         - Users
       summary: Get full recipe created by the user.
       description: Return  the full recipe created by the user for the logged in user.
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: recipe's Id
+          schema:
+            type: integer
+            example: 1
       responses:
         200:
           description: Successfully return user recipes.
