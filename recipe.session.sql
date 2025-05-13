@@ -11,18 +11,17 @@ CREATE TABLE Users (
   profilePic TEXT
 );
 
-CREATE TABLE Recipes (
-  recipe_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE myrecipes (
+  recipe_id INT PRIMARY KEY,
   user_id INT NOT NULL,
   title VARCHAR(255),
-  image_url TEXT,
-  prep_time_minutes INT,
-  servings INT,
-  likes INT,
-  ingredients TEXT,        -- JSON string
-  instructions TEXT,       -- JSON string
-  is_vegan BOOLEAN,
-  is_gluten_free BOOLEAN,
+  image TEXT,
+  time INT,
+  popularity INT,
+  vegan BOOLEAN,
+  glutenFree BOOLEAN,
+  number_of_portions INT,
+  summary TEXT,
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
@@ -58,24 +57,42 @@ CREATE TABLE FavoriteRecipes(
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
 );
-CREATE TABLE WatchedRecipes(
+CREATE TABLE lastviewed(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
-  watchedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  added_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
 );
-CREATE TABLE Ingredients (
-  ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL
-);
-Create TABLE RecipeIngredients (
+CREATE TABLE recipe_ingredients (
+  user_id INT NOT NULL,
   recipe_id INT NOT NULL,
-  ingredient_id INT NOT NULL,
-  amount VARCHAR(50),
-  unit VARCHAR(50),
-  PRIMARY KEY (recipe_id, ingredient_id),
-  FOREIGN KEY (recipe_id) REFERENCES Recipes(recipe_id),
-  FOREIGN KEY (ingredient_id) REFERENCES Ingredients(ingredient_id)
+  ingredient_number INT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  amount INT,
+  unit VARCHAR(50) NOT NULL,
+  description TEXT,
+  PRIMARY KEY (user_id, recipe_id, ingredient_number),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+);
+CREATE TABLE recipe_instructions (
+  user_id INT NOT NULL,
+  recipe_id INT NOT NULL,
+  instruction_number INT NOT NULL,
+  instruction TEXT NOT NULL,
+  PRIMARY KEY (user_id, recipe_id, instruction_number),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+ 
+);
+create table recipe_equipment (
+  user_id INT NOT NULL,
+  recipe_id INT NOT NULL,
+  equipment_number INT NOT NULL,
+  equipment VARCHAR(255) NOT NULL,
+  PRIMARY KEY (user_id, recipe_id, equipment_number),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
 );

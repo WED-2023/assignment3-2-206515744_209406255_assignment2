@@ -8,7 +8,6 @@ async function getUserIDFromUsername(username) {
 }
 
 async function markAsFavorite(user_id, recipe_id) {
-  console.log("WAS HERE");
   await DButils.execQuery(
     `insert into FavoriteRecipes (user_id, recipe_id) values ('${user_id}',${recipe_id})`
   );
@@ -16,7 +15,7 @@ async function markAsFavorite(user_id, recipe_id) {
 
 async function deleteUserFavorite(user_id, recipe_id) {
   await DButils.execQuery(
-    `delete from favoriterecipes where user_id = '${user_id}' AND recipe_id = ${recipe_id}`
+    `delete from FavoriteRecipes where user_id = '${user_id}' AND recipe_id = ${recipe_id}`
   );
 }
 
@@ -30,7 +29,7 @@ async function getFavoriteRecipes(user_id) {
 async function checkIfFavorite(userId, recipeId) {
   const result = await DButils.execQuery(
     `SELECT * 
-    FROM favoriterecipes
+    FROM FavoriteRecipes
     WHERE user_id='${userId}' AND recipe_id='${recipeId}'`
   );
   return result.length > 0;
@@ -63,7 +62,7 @@ async function addLastViewed(user_id, recipe_id) {
 
 async function deleteLastViewed(user_id, recipe_id) {
   await DButils.execQuery(
-    `delete from lastviewedwhere user_id = '${user_id}' AND recipe_id = ${recipe_id}`
+    `delete from lastviewed where user_id = '${user_id}' AND recipe_id = ${recipe_id}`
   );
 }
 
