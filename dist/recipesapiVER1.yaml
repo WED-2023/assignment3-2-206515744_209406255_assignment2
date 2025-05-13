@@ -141,20 +141,20 @@ paths:
                   type: integer
                   description: The unique ID of the recipe
       responses:
-        '202':
+        202:
           description: Recipe successfully added to the user's last viewed list
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessMessage' 
 
-        '400':
+        400:
           description: Invalid input (e.g., missing recipeId or invalid userName)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
-        '404':
+        404:
           description: User or recipe not found
           content:
             application/json:
@@ -705,9 +705,9 @@ components:
                 description: array of all the required equipment for the recipe.
             summary:
                 type: string
-                example: Hazelnut Truffles is a hor d'oeuvre that serves 15. One portion of this dish contains around 2g of protein,
+                example: Hazelnut Truffles is a hor doeuvre that serves 15. One portion of this dish contains around 2g of protein,
                  6g of fat, and a total of 72 calories. For 32 cents per serving, this recipe covers 3% of your daily requirements of 
-                 vitamins and minerals. It is a good option if you're following
+                 vitamins and minerals. It is a good option if youre following
                  a gluten free and lacto ovo vegetarian diet. 
                 description: Brief summary of the recipe with some additional information on the recipe.
 

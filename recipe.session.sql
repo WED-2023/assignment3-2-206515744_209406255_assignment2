@@ -48,14 +48,14 @@ CREATE TABLE MealPlan (
   progress FLOAT CHECK (progress >= 0 AND progress <= 1),
   PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
 CREATE TABLE FavoriteRecipes(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
 CREATE TABLE lastviewed(
   user_id INT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE lastviewed(
   added_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
 CREATE TABLE recipe_ingredients (
   user_id INT NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE recipe_ingredients (
   description TEXT,
   PRIMARY KEY (user_id, recipe_id, ingredient_number),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
 CREATE TABLE recipe_instructions (
   user_id INT NOT NULL,
@@ -84,15 +84,15 @@ CREATE TABLE recipe_instructions (
   instruction TEXT NOT NULL,
   PRIMARY KEY (user_id, recipe_id, instruction_number),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
  
 );
-create table recipe_equipment (
+create table recipe_equipments (
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   equipment_number INT NOT NULL,
   equipment VARCHAR(255) NOT NULL,
   PRIMARY KEY (user_id, recipe_id, equipment_number),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
+  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
