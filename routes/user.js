@@ -4,6 +4,7 @@ const DButils = require("./utils/DButils");
 const user_utils = require("./utils/user_utils");
 const recipe_utils = require("./utils/recipes_utils");
 const { add } = require("nodemon/lib/rules");
+const { check } = require("express-validator");
 
 /**
  * Authenticate all incoming requests by middleware
@@ -15,8 +16,7 @@ router.use(async function (req, res, next) {
         if (users.find((x) => x.user_id === req.session.user_id)) {
           req.user_id = req.session.user_id;
           next();
-        }
-        else {
+        } else {
           res.sendStatus(401);
         }
       })
@@ -39,10 +39,8 @@ router.post("/favorites", async (req, res, next) => {
         };
       else throw error;
     });
-    const result = await DButils.execQuery(
-      `SELECT * FROM favoriterecipes WHERE user_id = '${user_id}' AND recipe_id = ${recipe_id}`
-    );
-    if (result.length > 0)
+    const result = await checkIfFavorite(user_id, recipe_id);
+    if (result === true)
       throw {
         status: 400,
         message: `A recipe with the id ${recipe_id} already saved as favorite for ${user_id}.`,
@@ -113,14 +111,12 @@ router.post("/last-view", async (req, res, next) => {
         };
       else throw error;
     });
-    const result = await DButils.execQuery(
-      `SELECT * FROM lastviewed WHERE user_id = '${user_id}' AND recipe_id = ${recipe_id}`
-    );
+    const result = await user_utils.checkIfViewed(user_id, recipe_id);
 
     /*
     The user viewed this page and needed to refresh
     */
-    if (result.length > 0) {
+    if (result === true) {
       await user_utils.deleteLastViewed(user_id, recipe_id);
     }
 
@@ -177,20 +173,12 @@ router.post("/my-recipes", async (req, res, next) => {
     };
 
     const user_id = req.session.user_id;
-  
+
     recipe_details.vegan = req.body.vegan ? 1 : 0;
     recipe_details.glutenFree = req.body.glutenFree ? 1 : 0;
 
-    const count = await DButils.execQuery(
-      `SELECT COUNT(*) AS count FROM myrecipes WHERE user_id = '${req.session.user_id}';`
-    );
-    const recipe_id = parseInt(count[0].count) + 1;
-    console.log("Recipe details before going in: ", recipe_details);
-
-    console.log("Recipe ID after SQL: ", recipe_id);
-    await user_utils.addUserRecipe(
+    const recipe_id = await user_utils.addUserRecipe(
       user_id,
-      recipe_id,
       recipe_details.name,
       recipe_details.picture,
       recipe_details.time,
@@ -286,5 +274,76 @@ router.delete("/my-recipes", async (req, res, next) => {
     next(error);
   }
 });
+router.get("/meal-plan", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const meal_plan = await user_utils.getMealPlan(user_id);
+    res.status(200).send(meal_plan);
+  } catch (error) {
+    next(error);
+  }
+});
+router.post("/meal-plan", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipe_id = req.body.recipeId;
+    await user_utils.addMealPlan(user_id, recipe_id);
+    res.status(200).send("The Recipe successfully added to meal plan");
+  } catch (error) {
+    next(error);
+  }
+});
+router.delete("/meal-plan", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipe_id = req.body.recipeId;
+    await user_utils.deleteMealPlan(user_id, recipe_id);
+    res.status(200).send("The Recipe successfully deleted from meal plan");
+  } catch (error) {
+    next(error);
+  }
+});
 
+router.get("family-recipes", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const family_recipes = await user_utils.getFamilyRecipes(user_id);
+    res.status(200).send(family_recipes);
+  } catch (error) {
+    next(error);
+  }
+});
+router.post("family-recipes", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipe_creator = req.body.recipeCreator;
+    const when_eaten = req.body.whenEaten;
+    const ingredients = req.body.ingredients;
+    const instructions = req.body.instructions;
+    const image = req.body.image;
+    await user_utils.addFamilyRecipe(
+      user_id,
+      family_member,
+      occasion,
+      ingredients,
+      instructions,
+      image
+    );
+    res.status(200).send("The Recipe successfully added to family recipes");
+  } catch (error) {
+    next(error);
+  }
+});
+router.delete("family-recipes", async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const recipe_id = req.body.recipeId;
+    await user_utils.deleteFamilyRecipe(user_id, recipe_id);
+    res
+      .status(200)
+      .send("The Recipe successfully deleted from family recipes");
+  } catch (error) {
+    next(error);
+  }
+});
 module.exports = router;

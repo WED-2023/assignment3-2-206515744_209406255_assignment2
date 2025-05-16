@@ -1,6 +1,6 @@
 USE grandma_recipes_db;
 
-CREATE TABLE Users (
+CREATE TABLE users (
   user_id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   firstname VARCHAR(50) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE myrecipes (
-  recipe_id INT PRIMARY KEY,
+  recipe_id INT PRIMARY KEY AUTO_INCREMENT,
   user_id INT NOT NULL,
   title VARCHAR(255),
   image TEXT,
@@ -25,32 +25,26 @@ CREATE TABLE myrecipes (
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-CREATE TABLE FamilyRecipes (
-  recipe_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE familyrecipes (
+  familyrecipe_id INT AUTO_INCREMENT,
   user_id INT NOT NULL,
-  title VARCHAR(255),
-  image_url TEXT,
-  prep_time_minutes INT,
-  servings INT,
-  ingredients TEXT,
-  instructions TEXT,
-  is_vegan BOOLEAN,
-  is_gluten_free BOOLEAN,
   family_member VARCHAR(100),
   occasion VARCHAR(100),
-  step_images TEXT,
+  ingredients TEXT,
+  instructions TEXT,
+  image TEXT,
+  PRIMARY KEY (familyrecipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
-CREATE TABLE MealPlan (
+CREATE TABLE mealplan (
+  mealplan_id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
-  position INT,
-  progress FLOAT CHECK (progress >= 0 AND progress <= 1),
-  PRIMARY KEY (user_id, recipe_id),
+  position INT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
-CREATE TABLE FavoriteRecipes(
+CREATE TABLE favoriterecipes(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   PRIMARY KEY (user_id, recipe_id),
@@ -65,7 +59,7 @@ CREATE TABLE lastviewed(
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
-CREATE TABLE recipe_ingredients (
+CREATE TABLE recipeingredients (
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   ingredient_number INT NOT NULL,
@@ -77,7 +71,7 @@ CREATE TABLE recipe_ingredients (
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
-CREATE TABLE recipe_instructions (
+CREATE TABLE recipeinstructions (
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   instruction_number INT NOT NULL,
@@ -87,7 +81,7 @@ CREATE TABLE recipe_instructions (
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
  
 );
-create table recipe_equipments (
+create table recipeequipments (
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   equipment_number INT NOT NULL,
