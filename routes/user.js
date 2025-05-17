@@ -100,8 +100,10 @@ router.delete("/favorites", async (req, res, next) => {
  */
 router.post("/last-view", async (req, res, next) => {
   try {
+    console.log("before anything")
     const user_id = req.session.user_id;
     const recipe_id = req.body.recipeId;
+    console.log("before recipe utils");
     await recipe_utils.getRecipeInformation(recipe_id).catch((error) => {
       // check if recipe id exist on spoon
       if (error.response && error.response.status === 404)
@@ -111,7 +113,10 @@ router.post("/last-view", async (req, res, next) => {
         };
       else throw error;
     });
+    console.log("after recipe utils");
+    console.log("after check if viewed");
     const result = await user_utils.checkIfViewed(user_id, recipe_id);
+    console.log("after check if viewed");
 
     /*
     The user viewed this page and needed to refresh
@@ -124,6 +129,7 @@ router.post("/last-view", async (req, res, next) => {
 
     res.status(200).send("The Recipe successfully saved to last-viewed");
   } catch (error) {
+    console.log("error in last view");
     next(error);
   }
 });
@@ -286,7 +292,7 @@ router.get("/meal-plan", async (req, res, next) => {
 router.post("/meal-plan", async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
-    const recipe_id = req.body.recipeId;
+    const recipe_id = req.body.recipe_id;
     await user_utils.addMealPlan(user_id, recipe_id);
     res.status(200).send("The Recipe successfully added to meal plan");
   } catch (error) {
@@ -296,7 +302,7 @@ router.post("/meal-plan", async (req, res, next) => {
 router.delete("/meal-plan", async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
-    const recipe_id = req.body.recipeId;
+    const recipe_id = req.body.recipe_id;
     await user_utils.deleteMealPlan(user_id, recipe_id);
     res.status(200).send("The Recipe successfully deleted from meal plan");
   } catch (error) {
@@ -306,7 +312,7 @@ router.delete("/meal-plan", async (req, res, next) => {
 
 router.get("family-recipes", async (req, res, next) => {
   try {
-    const user_id = req.session.user_id;
+    const user_id = req.session.id;
     const family_recipes = await user_utils.getFamilyRecipes(user_id);
     res.status(200).send(family_recipes);
   } catch (error) {
@@ -315,9 +321,9 @@ router.get("family-recipes", async (req, res, next) => {
 });
 router.post("family-recipes", async (req, res, next) => {
   try {
-    const user_id = req.session.user_id;
-    const recipe_creator = req.body.recipeCreator;
-    const when_eaten = req.body.whenEaten;
+    const user_id = req.session.id;
+    const family_member = req.body.familyMember;
+    const occasion = req.body.Ocassion;
     const ingredients = req.body.ingredients;
     const instructions = req.body.instructions;
     const image = req.body.image;
@@ -336,12 +342,10 @@ router.post("family-recipes", async (req, res, next) => {
 });
 router.delete("family-recipes", async (req, res, next) => {
   try {
-    const user_id = req.session.user_id;
+    const user_id = req.session.id;
     const recipe_id = req.body.recipeId;
     await user_utils.deleteFamilyRecipe(user_id, recipe_id);
-    res
-      .status(200)
-      .send("The Recipe successfully deleted from family recipes");
+    res.status(200).send("The Recipe successfully deleted from family recipes");
   } catch (error) {
     next(error);
   }

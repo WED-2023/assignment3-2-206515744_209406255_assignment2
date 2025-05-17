@@ -229,10 +229,11 @@ async function addMealPlan(user_id, recipe_id) {
   const nextPos = rows[0].nextPos;
   await DButils.execQuery(
     "INSERT INTO mealplan (user_id, recipe_id, position) VALUES (?, ?, ?)",
-    [userId, recipeId, nextPos]
+    [user_id, recipe_id, nextPos]
   );
 }
 async function deleteMealPlan(user_id, recipe_id) {
+  //TODO IF MEALPLAN EMPTY WHAT TO DO?
   await DButils.execQuery(
     "DELETE FROM mealplan WHERE user_id = ? AND recipe_id = ?",
     [user_id, recipe_id]
@@ -271,6 +272,7 @@ async function deleteFamilyRecipe(user_id, familyrecipe_id) {
 }
 
 module.exports = {
+  deleteFamilyRecipe,
   addFamilyRecipe,
   getFamilyRecipes,
   deleteMealPlan,
