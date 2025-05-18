@@ -508,7 +508,7 @@ paths:
           description: a natural language description of the desired recipe.
           schema:
             type: string
-            example: pasta with tuna and bamba
+            example: pasta with tuna
 
         - name: number
           in: query
@@ -824,7 +824,7 @@ components:
       description: Model containing only the recipe preview
       type: object
       required:
-        - id
+        - recipe_id
         - title
         - image
         - readyInMinutes
@@ -833,7 +833,7 @@ components:
         - vegetarian
         - glutenFree
       properties:
-        id:
+        recipe_id:
           type: integer
           description: id of the recipe
           exampe: 779

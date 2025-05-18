@@ -1,440 +1,328 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 const DButils = require("./utils/DButils");
 const user_utils = require("./utils/user_utils");
 const recipe_utils = require("./utils/recipes_utils");
-const { add } = require("nodemon/lib/rules");
-const { check } = require("express-validator");
 
-/**
- * Authenticate all incoming requests by middleware
- */
-router.use(async function (req, res, next) {
-  if (req.session && req.session.user_id) {
-    DButils.execQuery("SELECT user_id FROM Users where user_id = ?", [
-      req.session.user_id,
-    ])
-      .then((users) => {
-        if (users.length > 0) {
-          req.user_id = req.session.user_id;
-          next();
-        } else {
-          return res.status(401).send({
-            error: true,
-            message: "User not found",
-          });
-        }
-      })
-      .catch((err) => next(err));
-  } else {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
+// Authentication middleware
+router.use(async (req, res, next) => {
+  try {
+    const user_id = req.session?.user_id;
+    if (!user_id) {
+      return res
+        .status(401)
+        .json({ message: "User not logged in", error: true });
+    }
+    const users = await DButils.execQuery(
+      "SELECT user_id FROM users WHERE user_id = ?",
+      [user_id]
+    );
+    if (users.length === 0) {
+      return res.status(401).json({ message: "User not found", error: true });
+    }
+    req.user_id = user_id;
+    next();
+  } catch (err) {
+    next(err);
   }
 });
 
+// POST /users/favorites
 router.post("/favorites", async (req, res, next) => {
   try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipe_id;
-    await recipe_utils.getRecipeInformation(recipe_id).catch((error) => {
-      // check if recipe id exist on spoon
-      if (error.response && error.response.status === 404)
-        return res.status(404).send({
+    const { recipe_id } = req.body;
+    const user_id = req.user_id;
+    if (!recipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing recipe_id", error: true });
+    }
+    try {
+      await recipe_utils.getRecipeInformation(recipe_id);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return res
+          .status(404)
+          .json({ message: `Recipe ${recipe_id} not found.`, error: true });
+      }
+      throw error;
+    }
+    const isFavorite = await user_utils.isRecipeFavorite(user_id, recipe_id);
+    if (isFavorite) {
+      return res
+        .status(400)
+        .json({
+          message: `Recipe ${recipe_id} is already in favorites.`,
           error: true,
-          message: `A recipe with the id ${recipe_id} does not exist.`,
         });
-      else throw error;
-    });
-
-    const result = await checkIfFavorite(user_id, recipe_id);
-    if (result === true)
-      return res.status(400).send({
-        error: true,
-        message: `A recipe with the id ${recipe_id} already saved as favorite for ${user_id}.`,
-      });
-
+    }
     await user_utils.markAsFavorite(user_id, recipe_id);
-    res.status(200).send({
-      success: true,
-      message: "The Recipe successfully saved to favorites",
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/*
-=======
-
-/**
- * This path returns the favorites recipes that were saved by the logged-in user
- */
-router.get("/favorites", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
-  try {
-    const user_id = req.session.user_id;
-    const recipes_id = await user_utils.getFavoriteRecipes(user_id);
-    let recipes_id_array = [];
-    recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
-    const results = await recipe_utils.getRecipesDetails(recipes_id_array);
-    for (let recipe of results) {
-      recipe.viewed = await user_utils.checkIfViewed(
-        req.session.user_id,
-        recipe.id
-      );
-      recipe.favorite = true;
-    }
-    res.status(200).send(results);
-  } catch (error) {
-    next(error);
-  }
-});
-/*
-Deletes From user's favorites
-*/
-router.delete("/favorites", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
-  try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipe_id;
-    await user_utils.deleteUserFavorite(user_id, recipe_id);
-    res
-      .status(200)
-      .send({
-        success: true,
-        message: "The Recipe successfully deleted from user's favorites",
-      });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * This path gets body with recipe_id and save this recipe in the favorites list of the logged-in user
- */
-router.post("/last-view", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
-  try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipe_id;
-    await recipe_utils.getRecipeInformation(recipe_id).catch((error) => {
-      // check if recipe id exist on spoon
-      if (error.response && error.response.status === 404)
-        throw {
-          status: 404,
-          message: `A recipe with the id ${recipe_id} does not exist.`,
-        };
-      else throw error;
-    });
-
-    const result = await user_utils.checkIfViewed(user_id, recipe_id);
-    /*
-    The user viewed this page and needed to refresh
-    */
-    if (result === true) {
-      await user_utils.deleteLastViewed(user_id, recipe_id);
-    }
-
-    await user_utils.addLastViewed(user_id, recipe_id);
-
     return res
       .status(201)
-      .send({
-        success: true,
-        message: "The Recipe successfully saved to last-viewed",
-      });
-  } catch (error) {
-    console.log("error in last view");
-    next(error);
+      .json({ message: "Recipe added to favorites", success: true });
+  } catch (err) {
+    next(err);
   }
 });
-/*
-Gets user's last viewed by number of viewes or defualt 3
-*/
-router.get("/last-view", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
+
+// GET /users/favorites
+router.get("/favorites", async (req, res, next) => {
   try {
-    const number = parseInt(req.query.number) || 3;
-    const user_id = req.session.user_id;
-    const recipes_id = await user_utils.getLastViewed(user_id, number);
-    let recipes_id_array = [];
-    recipes_id.map((element) => recipes_id_array.push(element.recipe_id)); //extracting the recipe ids into array
-    const results = await recipe_utils.getRecipesDetails(recipes_id_array);
-    for (let recipe of results) {
-      recipe.viewed = true;
-      recipe.favorite = await user_utils.checkIfFavorite(
-        req.session.user_id,
-        recipe.id
-      );
+    const user_id = req.user_id;
+    const favoriteIds = await user_utils.getFavoriteRecipes(user_id);
+    const recipes = await recipe_utils.getRecipesDetails(favoriteIds);
+    // Enrich with viewed and favorite flags
+    for (const recipe of recipes) {
+      recipe.viewed = await user_utils.isRecipeViewed(user_id, recipe.id);
+      recipe.favorite = true;
     }
-    res.status(200).send(results);
-  } catch (error) {
-    next(error);
+    return res.status(200).json(recipes);
+  } catch (err) {
+    next(err);
   }
 });
-/*
-Add user's last view
-*/
+
+// DELETE /users/favorites
+router.delete("/favorites", async (req, res, next) => {
+  try {
+    const { recipe_id } = req.body;
+    const user_id = req.user_id;
+    if (!recipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing recipe_id", error: true });
+    }
+    const isFavorite = await user_utils.isRecipeFavorite(user_id, recipe_id);
+    if (!isFavorite) {
+      return res
+        .status(404)
+        .json({
+          message: `Recipe ${recipe_id} not in favorites.`,
+          error: true,
+        });
+    }
+    await user_utils.deleteUserFavorite(user_id, recipe_id);
+    return res
+      .status(200)
+      .json({ message: "Recipe removed from favorites", success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /users/last-view
+router.post("/last-view", async (req, res, next) => {
+  try {
+    const { recipe_id } = req.body;
+    const user_id = req.user_id;
+    if (!recipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing recipe_id", error: true });
+    }
+    try {
+      await recipe_utils.getRecipeInformation(recipe_id);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return res
+          .status(404)
+          .json({ message: `Recipe ${recipe_id} not found.`, error: true });
+      }
+      throw error;
+    }
+    if (await user_utils.isRecipeViewed(user_id, recipe_id)) {
+      await user_utils.deleteLastViewed(user_id, recipe_id);
+    }
+    await user_utils.addLastViewed(user_id, recipe_id);
+    return res
+      .status(201)
+      .json({ message: "Recipe saved to last-viewed", success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /users/last-view
+router.get("/last-view", async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.number, 10) || 3;
+    const user_id = req.user_id;
+    const viewedIds = await user_utils.getLastViewed(user_id, limit);
+    const recipes = await recipe_utils.getRecipesDetails(viewedIds);
+    for (const recipe of recipes) {
+      recipe.viewed = true;
+      recipe.favorite = await user_utils.isRecipeFavorite(user_id, recipe.id);
+    }
+    return res.status(200).json(recipes);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /users/my-recipes
 router.post("/my-recipes", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    console.log(req.body);
-    let recipe_details = {
-      image: req.body.image,
-      title: req.body.title,
-      readyInMinutes: req.body.readyInMinutes,
-      popularity: 0,
-      vegan: req.body.vegan,
-      vegetarian: req.body.vegetarian,
-      glutenFree: req.body.glutenFree,
-      ingredients: req.body.ingredients,
-      instructions: req.body.instructions,
-      numberOfPortions: req.body.numberOfPortions,
-      equipment: req.body.equipment,
-      summary: req.body.summary,
+    const user_id = req.user_id;
+    const recipe = req.body;
+    // add recipe
+    const recipeDetails = {
+      ...recipe,
+      aggregateLikes: 0,
+      vegan: recipe.vegan ? 1 : 0,
+      vegetarian: recipe.vegetarian ? 1 : 0,
+      glutenFree: recipe.glutenFree ? 1 : 0,
     };
-
-    const user_id = req.session.user_id;
-
-    recipe_details.vegan = req.body.vegan ? 1 : 0;
-    recipe_details.vegetarian = req.body.vegetarian ? 1 : 0;
-    recipe_details.glutenFree = req.body.glutenFree ? 1 : 0;
-
-    const recipe_id = await user_utils.addUserRecipe(user_id, recipe_details);
-
-    await user_utils.addIngredients(
-      user_id,
-      recipe_id,
-      recipe_details.ingredients
-    );
-
-    console.log(recipe_details.instructions);
-    await user_utils.addInstructions(
-      user_id,
-      recipe_id,
-      recipe_details.instructions
-    );
-
-    // Add all the equipments
-    await user_utils.addEquipments(
-      user_id,
-      recipe_id,
-      recipe_details.equipment
-    );
-    res.status(201).send({ message: "Recipe has been added", success: true });
-  } catch (error) {
-    next(error);
+    const recipe_id = await user_utils.addUserRecipe(user_id, recipeDetails);
+    // await user_utils.addIngredients(user_id, recipe_id, recipe.ingredients);
+    // await user_utils.addInstructions(user_id, recipe_id, recipe.instructions);
+    // await user_utils.addEquipments(user_id, recipe_id, recipe.equipment);
+    return res
+      .status(201)
+      .json({ message: `Recipe ${recipe_id} added to user recipes`, success: true });
+  } catch (err) {
+    next(err);
   }
 });
-/*
-Get user's own recipes
-*/
+
+// GET /users/my-recipes
 router.get("/my-recipes", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const results = await user_utils.getUserRecipes(user_id);
-    console.log(results);
-    return res.status(200).send(results);
-  } catch (error) {
-    next(error);
+    const recipes = await user_utils.getUserRecipes(req.user_id);
+    return res.status(200).json(recipes);
+  } catch (err) {
+    next(err);
   }
 });
-/*
-Get user's Specific Recipe
-*/
+
+// GET /users/my-recipes/:recipe_id
 router.get("/my-recipes/:recipe_id", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.params.recipe_id;
-    const result = await user_utils.getUserSpecificRecipe(user_id, recipe_id);
-    console.log(result);
-    return res.status(200).send(result);
-  } catch (error) {
-    next(error);
+    const { recipe_id } = req.params;
+    const recipe = await user_utils.getUserSpecificRecipe(
+      req.user_id,
+      recipe_id
+    );
+    return res.status(200).json(recipe);
+  } catch (err) {
+    next(err);
   }
 });
-/*
-Delete user's own recipes
-*/
+
+// DELETE /users/my-recipes
 router.delete("/my-recipes", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipe_id;
-    await user_utils.deleteUserRecipe(user_id, recipe_id);
-    return res.status(200).send({
-      success: true,
-      message: "The Recipe successfully deleted from user's recieps",
-    });
-  } catch (error) {
-    next(error);
+    const { recipe_id } = req.body;
+    if (!recipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing recipe_id", error: true });
+    }
+    await user_utils.deleteUserRecipe(req.user_id, recipe_id);
+    return res
+      .status(200)
+      .json({ message: "Recipe removed from user recipes", success: true });
+  } catch (err) {
+    next(err);
   }
 });
 
+// GET /users/meal-plan
 router.get("/meal-plan", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const meal_plan = await user_utils.getMealPlan(user_id);
-    return res.status(200).send(meal_plan);
-  } catch (error) {
-    next(error);
+    const plan = await user_utils.getMealPlan(req.user_id);
+    return res.status(200).json(plan);
+  } catch (err) {
+    next(err);
   }
 });
 
+// POST /users/meal-plan
 router.post("/meal-plan", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipe_id;
-    await user_utils.addMealPlan(user_id, recipe_id);
-    return res.status(200).send({
-      success: true,
-      message: "The Recipe successfully added to meal plan",
-    });
-  } catch (error) {
-    next(error);
+    const { recipe_id } = req.body;
+    if (!recipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing recipe_id", error: true });
+    }
+    await user_utils.addMealPlan(req.user_id, recipe_id);
+    return res
+      .status(200)
+      .json({ message: "Recipe added to meal plan", success: true });
+  } catch (err) {
+    next(err);
   }
 });
 
+// DELETE /users/meal-plan
 router.delete("/meal-plan", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const recipe_id = req.body.recipe_id;
-    await user_utils.deleteMealPlan(user_id, recipe_id);
-    return res.status(200).send({
-      success: true,
-      message: "The Recipe successfully deleted from meal plan",
-    });
-  } catch (error) {
-    next(error);
+    const { recipe_id } = req.body;
+    if (!recipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing recipe_id", error: true });
+    }
+    await user_utils.deleteMealPlan(req.user_id, recipe_id);
+    return res
+      .status(200)
+      .json({ message: "Recipe removed from meal plan", success: true });
+  } catch (err) {
+    next(err);
   }
 });
 
+// GET /users/family-recipes
 router.get("/family-recipes", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const family_recipes = await user_utils.getFamilyRecipes(user_id);
-    return res.status(200).send(family_recipes);
-  } catch (error) {
-    next(error);
+    const familyRecipes = await user_utils.getFamilyRecipes(req.user_id);
+    return res.status(200).json(familyRecipes);
+  } catch (err) {
+    next(err);
   }
 });
 
+// POST /users/family-recipes
 router.post("/family-recipes", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const family_member = req.body.family_member;
-    const occasion = req.body.occasion;
-    const ingredients = req.body.ingredients;
-    const instructions = req.body.instructions;
-    const image = req.body.image;
+    const { family_member, occasion, ingredients, instructions, image } =
+      req.body;
+    if (!family_member || !occasion || !ingredients || !instructions) {
+      return res
+        .status(400)
+        .json({ message: "Missing required fields", error: true });
+    }
     await user_utils.addFamilyRecipe(
-      user_id,
+      req.user_id,
       family_member,
       occasion,
       ingredients,
       instructions,
       image
     );
-    return res.status(201).send({
-      success: true,
-      message: "The Recipe successfully added to family recipes",
-    });
-  } catch (error) {
-    next(error);
+    return res
+      .status(201)
+      .json({ message: "Family recipe added", success: true });
+  } catch (err) {
+    next(err);
   }
 });
 
+// DELETE /users/family-recipes
 router.delete("/family-recipes", async (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.status(401).send({
-      error: true,
-      message: "User not logged in",
-    });
-  }
   try {
-    const user_id = req.session.user_id;
-    const familyrecipe_id = req.body.familyrecipe_id;
-    await user_utils.deleteFamilyRecipe(user_id, familyrecipe_id);
-    return res.status(200).send({
-      success: true,
-      message: "The Recipe successfully deleted from family recipes",
-    });
-  } catch (error) {
-    next(error);
+    const { familyrecipe_id } = req.body;
+    if (!familyrecipe_id) {
+      return res
+        .status(400)
+        .json({ message: "Missing familyrecipe_id", error: true });
+    }
+    await user_utils.deleteFamilyRecipe(req.user_id, familyrecipe_id);
+    return res
+      .status(200)
+      .json({ message: "Family recipe removed", success: true });
+  } catch (err) {
+    next(err);
   }
 });
 
