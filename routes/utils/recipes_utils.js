@@ -1,7 +1,6 @@
 const axios = require("axios");
 const api_domain = "https://api.spoonacular.com/recipes";
 
-
 async function getRecipeInformation(recipe_id) {
   return await axios.get(`${api_domain}/${recipe_id}/information`, {
     params: {
@@ -94,6 +93,9 @@ async function getSearchRecipeDetails(params, numberOfResults) {
   let recipe_info = await getSearchRecipeInformation(params);
   let recipes = [];
   let results = recipe_info.data.results.length;
+  if (results === 0) {
+    return [];
+  }
   if (numberOfResults > results) {
     if (results >= 10) numberOfResults = 10;
     else if (results >= 5) numberOfResults = 5;

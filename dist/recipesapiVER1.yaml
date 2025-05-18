@@ -21,7 +21,7 @@ paths:
       tags:
         - Auth
       summary: user try to login
-      description: check if the user authntication details are correct, and if so will return the user first and last name.
+      description: check if the user authntication details are correct.
       requestBody:
         required: true
         content:
@@ -30,14 +30,14 @@ paths:
               $ref: "#/components/schemas/LoginUser"
         description: User details to sign in
       responses:
-        200:
+        202:
           description: users details are valid.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserDetails"
+                $ref: "#/components/schemas/SuccessMessage"
         401:
-          description: username or password is inccorect
+          description: username or password is incorrect
           content:
             applicatiom/json:
               schema:
@@ -63,7 +63,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
         409:
-          description: user name is taken.
+          description: username is taken.
           content:
             application/json:
               schema:
@@ -82,7 +82,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
-        400:
+        401:
           description: user wasn't logged in.
           content:
             application/json:
@@ -111,7 +111,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreView"
+                  $ref: "#/components/schemas/RecipePreview"
         401:
           description: User is not logged in.
           content:
@@ -131,13 +131,13 @@ paths:
             schema:
               type: object
               required:
-                - recipeId
+                - recipe_id
               properties:
-                recipeId:
+                recipe_id:
                   type: integer
                   description: The unique ID of the recipe
       responses:
-        202:
+        201:
           description: Recipe successfully added to the user's last viewed list
           content:
             application/json:
@@ -145,7 +145,13 @@ paths:
                 $ref: "#/components/schemas/SuccessMessage"
 
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
           content:
             application/json:
               schema:
@@ -183,8 +189,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreView"
-        401:
+                  $ref: "#/components/schemas/RecipePreview"
+        400:
           description: n value is not valid.
           content:
             application/json:
@@ -205,7 +211,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreView"
+                  $ref: "#/components/schemas/RecipePreview"
         401:
           description: User is not authorized.
           content:
@@ -225,13 +231,13 @@ paths:
             schema:
               type: object
               required:
-                - recipeId
+                - recipe_id
               properties:
-                recipeId:
+                recipe_id:
                   type: integer
                   description: The unique ID of the recipe
       responses:
-        200:
+        201:
           description: Recipe successfully added to the user's favorites list
           content:
             application/json:
@@ -269,9 +275,9 @@ paths:
             schema:
               type: object
               required:
-                - recipeId
+                - recipe_id
               properties:
-                recipeId:
+                recipe_id:
                   type: integer
                   description: The unique ID of the user recipe
 
@@ -284,7 +290,13 @@ paths:
                 $ref: "#/components/schemas/SuccessMessage"
 
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
           content:
             application/json:
               schema:
@@ -310,7 +322,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreView"
+                  $ref: "#/components/schemas/RecipePreview"
         401:
           description: User is not logged in.
           content:
@@ -338,7 +350,13 @@ paths:
                 $ref: "#/components/schemas/SuccessMessage"
 
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
           content:
             application/json:
               schema:
@@ -362,9 +380,9 @@ paths:
             schema:
               type: object
               required:
-                - recipeId
+                - recipe_id
               properties:
-                recipeId:
+                recipe_id:
                   type: integer
                   description: The unique ID of the user recipe
 
@@ -377,7 +395,13 @@ paths:
                 $ref: "#/components/schemas/SuccessMessage"
 
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
           content:
             application/json:
               schema:
@@ -389,14 +413,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
-  /users/my-recipes/{recipeId}:
+  /users/my-recipes/{recipe_id}:
     get:
       tags:
         - Users
       summary: Get full recipe created by the user.
       description: Return  the full recipe created by the user for the logged in user.
       parameters:
-        - name: recipeId
+        - name: recipe_id
           in: path
           required: true
           description: recipe's Id
@@ -411,22 +435,28 @@ paths:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/FullRecipe"
-                  - $ref: "#/components/schemas/RecipePreView"
+                  - $ref: "#/components/schemas/RecipePreview"
         401:
           description: User is not logged in.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 
-  /recipes/{recipeId}:
+  /recipes/{recipe_id}:
     get:
       tags:
         - Recipes
       summary: Get the preview or the full recipe.
       description: Return the full recipe of the specified recipe id if the full param is ture or else return the preview.
       parameters:
-        - name: recipeId
+        - name: recipe_id
           in: path
           required: true
           description: recipe's Id
@@ -441,7 +471,7 @@ paths:
             type: boolean
             example: true
       responses:
-        200:
+        201:
           description: >
             Successfully returned recipe. If the 'full' query parameter is true, 
             the response will match the FullRecipe schema. Otherwise, it will match 
@@ -564,7 +594,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: User or recipe not found
           content:
             application/json:
               schema:
@@ -581,9 +623,9 @@ paths:
             schema:
               type: object
               required:
-                - recipeId
+                - recipe_id
               properties:
-                recipeId:
+                recipe_id:
                   type: integer
                   description: The unique ID of the family recipe
 
@@ -595,7 +637,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
           content:
             application/json:
               schema:
@@ -656,7 +698,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
         400:
-          description: Invalid input (e.g., missing recipeId or invalid userName)
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: User or recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+    delete:
+      tags:
+        - Users
+      summary: Delete a recipe from the user's meal plan
+      description: Delete a recipe from the user's meal plan. Must specify the user id and the recipe id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipe_id
+              properties:
+                recipe_id:
+                  type: integer
+                  description: The unique ID of the recipe
+
+      responses:
+        200:
+          description: Recipe successfully deleted from the user's meal plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        400:
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
           content:
             application/json:
               schema:
@@ -676,6 +767,7 @@ components:
       required:
         - user_id
         - recipe_id
+        - position
       properties:
         user_id:
           type: integer
@@ -685,26 +777,30 @@ components:
           type: integer
           description: id of the recipe
           example: 779
+        position:
+          type: integer
+          description: position of the recipe in the meal plan
+          example: 1
     FamilyRecipe:
       description: family recipe
       type: object
       required:
         - id
-        - familyMember
-        - Occasion
+        - family_member
+        - occasion
         - ingredients
         - instructions
         - image
       properties:
-        id:
+        recipe_id:
           type: integer
-          description: id of the recipe
+          description: recipe id of the recipe
           exampe: 779
-        familyMember:
+        family_member:
           type: string
           description: family member who created the recipe
           example: Ilay Gavrilenko
-        Occasion:
+        occasion:
           type: string
           description: occasion for which the recipe is suitable
           example: birthday
@@ -723,7 +819,7 @@ components:
           description: recipe image
           format: URL
           example: https://spoonacular.com/recipeimages/655455-566x370.jpg
-    RecipePreView:
+    RecipePreview:
       description: Model containing only the recipe preview
       type: object
       required:
@@ -847,7 +943,7 @@ components:
           example: Gavrilenko
     SearchResult:
       allOf:
-        - $ref: "#/components/schemas/RecipePreView"
+        - $ref: "#/components/schemas/RecipePreview"
         - type: object
           properties:
             instructions:
@@ -858,7 +954,7 @@ components:
                 description: instructions steps for the recipe, ordered from step 1 (array[0]) to the last step (array[array.length -1]).
     FullRecipe:
       allOf:
-        - $ref: "#/components/schemas/RecipePreView"
+        - $ref: "#/components/schemas/RecipePreview"
         - type: object
           properties:
             ingredients:
@@ -913,88 +1009,15 @@ components:
                 a gluten free and lacto ovo vegetarian diet.
               description: Brief summary of the recipe with some additional information on the recipe.
 
-      description: Model containing only the recipe preview
-      type: object
-      required:
-        - title
-        - image
-        - readyInMinutes
-        - aggregateLikes
-        - vegan
-        - glutenFree
-      properties:
-        title:
-          type: string
-          description: recipe title name
-          example: Baba Ganush
-        image:
-          type: string
-          description: recipe image
-          format: URL
-          example: https://spoonacular.com/recipeimages/655455-566x370.jpg
-        readyInMinutes:
-          type: integer
-          description: the time in minutes that takes to make the recipe
-          example: 20
-        aggregateLikes:
-          type: integer
-          description: the amount of likes given to the recipe.
-          example: 20
-        vegan:
-          type: boolean
-          description: does the recipe is vegan
-        glutenFree:
-          type: boolean
-          description: does the recipe is vegetrian
-        ingredients:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-                example: carrot
-                description: Name of the ingredient.
-
-              amount:
-                type: integer
-                example: 3
-                description: The quantity of the ingredient.
-
-              unit:
-                type: string
-                example: large
-                description: The unit of the quantity for the ingredient.
-
-              description:
-                type: string
-                example: 3 large washed and chopped carrot.
-                description: a brief description of how to use the ingredient.
-        instructions:
-          type: array
-          items:
-            type: string
-            example: Drain the eggs, return them to the pan and shake the pan to crack the shells all over.
-            description: instructions steps for the recipe, ordered from step 1 (array[0]) to the last step (array[array.length -1]).
-
-        numberOfPortions:
-          type: integer
-          description: Number of serving portions for the recipe.
-          example: 4
-
-        equipment:
-          type: array
-          items:
-            type: string
-            example: sauce pan
-            description: array of all the required equipment for the recipe.
-
     ErrorMessage:
       type: object
       properties:
         message:
           type: string
           example: error message
+        error:
+          type: boolean
+          example: false
 
     SuccessMessage:
       type: object
@@ -1002,3 +1025,6 @@ components:
         message:
           type: string
           example: success message
+        success:
+          type: boolean
+          example: true

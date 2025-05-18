@@ -14,7 +14,7 @@ router.get("/random", async (req, res, next) => {
     if (req.query.number) {
       const num = parseInt(req.query.number,10);
       if (num > 10 || num < 1)
-        throw { status: 400, message: "number must be between 1 and 10." };
+        return res.status(401).send({error: true, message: "number must be between 1 and 10."});
       number = num;
     }
     res.locals.recipes = await recipes_utils.getRandomRecipeDetails(number);
@@ -30,15 +30,15 @@ router.get("/search", async (req, res, next) => {
   try {
     let { query, number, cuisines, diet, intolerances } = req.query;
 
-    if (!query) throw { status: 400, message: "must be a query for search." };
+    if (!query) 
+      return res.status(400).send({ success:false, message: "must be a query for search." });
 
     let numberOfResults = 5;
     let numbers = ["5", "10", "15"];
 
     if (number) {
       if (!numbers.includes(number))
-        throw { status: 400, message: "n must be equal to 5,10 or 15." };
-
+        return res.status(400).send({ success:false, message: "n must be equal to 5,10 or 15." });
       numberOfResults = number;
     }
 
@@ -54,22 +54,25 @@ router.get("/search", async (req, res, next) => {
       params,
       numberOfResults
     );
+    if (res.locals.recipes.length === 0) {
+      return res.status(404).send({ error:false, message: "no recipes found." });
+    }
     await addViewedInfo(req, res, next);
   } catch (error) {
     next(error);
   }
 });
 
-router.get("/:recipeId", async (req, res, next) => {
+router.get("/:recipe_id", async (req, res, next) => {
   try {
     if (req.query.full) {
       res.locals.recipes = [
-        await recipes_utils.getFullRecipeDetails(req.params.recipeId),
+        await recipes_utils.getFullRecipeDetails(req.params.recipe_id),
       ];
       await addViewedInfo(req, res, next);
     } else {
       res.locals.recipes = [
-        await recipes_utils.getRecipeDetails(req.params.recipeId),
+        await recipes_utils.getRecipeDetails(req.params.recipe_id),
       ];
       await addViewedInfo(req, res, next);
     }
@@ -94,15 +97,14 @@ async function addViewedInfo(req, res, next) {
       }
     }
     // Send the response
-    res.status(200).send(res.locals.recipes);
+    return res.status(200).send(res.locals.recipes);
   } catch (error) {
     next(error);
   }
 }
 
 router.use((err, req, res, next) => {
-  res.status(500).send({ error: err.toString() });
-  console.log(err.toString());
+  return res.status(500).send({success:false,message: err.toString() });
 });
 
 module.exports = router;

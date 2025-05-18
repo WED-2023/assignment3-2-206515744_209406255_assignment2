@@ -74,14 +74,19 @@ app.use(function (req, res, next) {
   console.log(req.session);
   console.log("session: ", req.session.user_id);
   if (req.session && req.session.user_id) {
-    DButils.execQuery("SELECT user_id FROM users")
+    DButils.execQuery("SELECT user_id FROM users WHERE user_id = ?", [
+      req.session.user_id,
+    ])
       .then((users) => {
-        if (users.find((x) => x.user_id === req.session.user_id)) {
+        if (users.length > 0) {
           req.user_id = req.session.user_id;
         }
         next();
       })
-      .catch((error) => next());
+      .catch((error) => {
+        console.error("DB error:", error);
+        next();
+      });
   } else {
     next();
   }

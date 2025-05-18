@@ -18,11 +18,12 @@ CREATE TABLE myrecipes (
   user_id INT NOT NULL,
   title VARCHAR(255),
   image TEXT,
-  time INT,
-  popularity INT,
+  readyInMinutes INT,
+  aggregateLikes INT,
   vegan BOOLEAN,
+  vegetarian BOOLEAN,
   glutenFree BOOLEAN,
-  number_of_portions INT,
+  numberOfPortions INT,
   summary TEXT,
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
@@ -39,10 +40,10 @@ CREATE TABLE familyrecipes (
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 CREATE TABLE mealplan (
-  mealplan_id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   position INT NOT NULL,
+  PRIMARY KEY (user_id, recipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
