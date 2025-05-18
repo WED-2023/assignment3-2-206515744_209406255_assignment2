@@ -135,7 +135,7 @@ async function addEquipments(user_id, recipe_id, equipments) {
 
 async function getUserRecipes(user_id) {
   const user_recipes = await DButils.execQuery(
-    "SELECT id,title,image,readyInMinutes,aggregateLikes,vegan,vegetarian,glutenFree, FROM myrecipes WHERE user_id = ?",
+    "SELECT id,title,image,readyInMinutes,aggregateLikes,vegan,vegetarian,glutenFree FROM myrecipes WHERE user_id = ?",
     [user_id]
   );
 

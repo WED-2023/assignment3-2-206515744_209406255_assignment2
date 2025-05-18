@@ -426,9 +426,9 @@ router.delete("/family-recipes", async (req, res, next) => {
     });
   }
   try {
-    const user_id = req.session.id;
-    const recipe_id = req.body.recipe_id;
-    await user_utils.deleteFamilyRecipe(user_id, recipe_id);
+    const user_id = req.session.user_id;
+    const familyrecipe_id = req.body.familyrecipe_id;
+    await user_utils.deleteFamilyRecipe(user_id, familyrecipe_id);
     return res.status(200).send({
       success: true,
       message: "The Recipe successfully deleted from family recipes",

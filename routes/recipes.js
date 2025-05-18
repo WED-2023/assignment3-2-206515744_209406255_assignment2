@@ -14,7 +14,7 @@ router.get("/random", async (req, res, next) => {
     if (req.query.number) {
       const num = parseInt(req.query.number,10);
       if (num > 10 || num < 1)
-        return res.status(401).send({error: true, message: "number must be between 1 and 10."});
+        return res.status(400).send({error: true, message: "number must be between 1 and 10."});
       number = num;
     }
     res.locals.recipes = await recipes_utils.getRandomRecipeDetails(number);
@@ -82,6 +82,9 @@ router.get("/:recipe_id", async (req, res, next) => {
 });
 
 async function addViewedInfo(req, res, next) {
+  if (!res.locals.recipes) {
+    return res.status(400).send({ error: true, message: "no recipes found." });
+  }
   try {
     if (req.session && req.session.user_id) {
       // User is logged in, check if recipes were viewed or in his favorites

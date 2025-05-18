@@ -36,6 +36,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
+        400:
+          description: already logged in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
         401:
           description: username or password is incorrect
           content:
@@ -623,7 +629,7 @@ paths:
             schema:
               type: object
               required:
-                - recipe_id
+                - familyrecipe_id
               properties:
                 recipe_id:
                   type: integer
@@ -765,14 +771,9 @@ components:
       description: meal plan
       type: object
       required:
-        - user_id
         - recipe_id
         - position
       properties:
-        user_id:
-          type: integer
-          description: id of the user
-          example: 779
         recipe_id:
           type: integer
           description: id of the recipe
@@ -785,16 +786,16 @@ components:
       description: family recipe
       type: object
       required:
-        - id
+        - familyrecipe_id
         - family_member
         - occasion
         - ingredients
         - instructions
         - image
       properties:
-        recipe_id:
+        familyrecipe_id:
           type: integer
-          description: recipe id of the recipe
+          description: family recipe id of the recipe
           exampe: 779
         family_member:
           type: string
