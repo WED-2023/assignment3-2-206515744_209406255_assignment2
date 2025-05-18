@@ -13,7 +13,7 @@ app.use(express.json()); // parse application/json
 app.use(
   session({
     cookieName: "session", // the cookie key name
-    secret: "template", // the encryption key
+    secret: process.env.COOKIE_SECRET, // the encryption key
     duration: 24 * 60 * 60 * 1000, // expired after 20 sec
     activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration,
     cookie: {
@@ -39,8 +39,24 @@ app.get("/", function (req, res) {
 // app.use(cors());
 // app.options("*", cors());
 
+// const corsConfig = {
+//   origin: true,
+//   credentials: true,
+// };
+const allowedOrigins = [
+  "http://localhost:" + process.env.PORT,
+  "http://127.0.0.1:" + process.env.PORT,
+];
+console.log("allowedOrigins: ", allowedOrigins);
 const corsConfig = {
-  origin: true,
+  origin: (origin, callback) => {
+    // allow non-browser tools (no origin) or our two hosts
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
 };
 
@@ -55,6 +71,8 @@ const auth = require("./routes/auth");
 
 //#region cookie middleware
 app.use(function (req, res, next) {
+  console.log(req.session);
+  console.log("session: ", req.session.user_id);
   if (req.session && req.session.user_id) {
     DButils.execQuery("SELECT user_id FROM users")
       .then((users) => {

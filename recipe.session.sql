@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS grandma_recipes_db;
+
 USE grandma_recipes_db;
 
 CREATE TABLE users (
