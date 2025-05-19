@@ -51,16 +51,14 @@ CREATE TABLE favoriterecipes(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   PRIMARY KEY (user_id, recipe_id),
-  FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 CREATE TABLE lastviewed(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   added_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, recipe_id),
-  FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 CREATE TABLE recipeingredients (
   user_id INT NOT NULL,

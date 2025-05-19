@@ -21,7 +21,9 @@ router.post("/Register", async (req, res, next) => {
     users = await DButils.execQuery("SELECT username from users");
 
     if (users.find((x) => x.username === user_details.username))
-      return res.status(409).send({ message: "Username taken", error: true });
+      return res.status(409).send({
+        message: `Username -> ${user_details.username} is already taken!`, error: true
+      });
 
     // add the new username
     let hash_password = bcrypt.hashSync(
@@ -42,7 +44,9 @@ router.post("/Register", async (req, res, next) => {
         user_details.email,
       ]
     );
-    return res.status(201).send({ message: "user created", success: true });
+    return res.status(201).send({
+      message: `user with username -> ${user_details.username} created successfully!`, success: true
+    });
   } catch (error) {
     next(error);
   }
@@ -52,7 +56,7 @@ router.post("/Login", async (req, res, next) => {
   try {
     if (req.session.user_id) {
       return res.status(400).send({
-        message: "You are already logged in",
+        message: "User logged in successfully!",
         error: true,
       });
     }
@@ -82,7 +86,9 @@ router.post("/Login", async (req, res, next) => {
     console.log("session user_id login: " + req.session.user_id);
 
     // return cookie
-    return res.status(202).send({ message: "login succeeded ", success: true });
+    return res.status(202).send({ 
+      message: "login succeeded ", success: true 
+    });
   } catch (error) {
     next(error);
   }
@@ -98,7 +104,9 @@ router.post("/Logout", function (req, res, next) {
     }
     console.log("session user_id Logout: " + req.session.user_id);
     req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
-    return res.status(200).send({ success: true, message: "logout succeeded" });
+    return res.status(200).send({ 
+      success: true, message: "logout succeeded" 
+    });
   } catch (error) {
     next(error);
   }

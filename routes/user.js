@@ -173,9 +173,10 @@ router.post("/my-recipes", async (req, res, next) => {
       glutenFree: recipe.glutenFree ? 1 : 0,
     };
     const recipe_id = await user_utils.addUserRecipe(user_id, recipeDetails);
-    // await user_utils.addIngredients(user_id, recipe_id, recipe.ingredients);
-    // await user_utils.addInstructions(user_id, recipe_id, recipe.instructions);
-    // await user_utils.addEquipments(user_id, recipe_id, recipe.equipment);
+    await user_utils.addIngredients(user_id, recipe_id, recipe.ingredients);
+    await user_utils.addInstructions(user_id, recipe_id, recipe.instructions);
+    await user_utils.addEquipments(user_id, recipe_id, recipe.equipment);
+    
     return res
       .status(201)
       .json({ message: `Recipe ${recipe_id} added to user recipes`, success: true });

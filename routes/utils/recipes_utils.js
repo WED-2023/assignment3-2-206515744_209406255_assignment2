@@ -132,8 +132,8 @@ async function getRecipesDetails(recipesIdList = []) {
 async function enrichRecipesWithUserInfo(user_id, recipes = []) {
   if (!user_id) return recipes;
   for (const recipe of recipes) {
-    recipe.viewed = await user_utils.checkIfViewed(user_id, recipe.id);
-    recipe.favorite = await user_utils.checkIfFavorite(user_id, recipe.id);
+    recipe.viewed = await user_utils.isRecipeViewed(user_id, recipe.id);
+    recipe.favorite = await user_utils.isRecipeFavorite(user_id, recipe.id);
   }
   return recipes;
 }
