@@ -6,9 +6,6 @@ const bcrypt = require("bcrypt");
 
 router.post("/Register", async (req, res, next) => {
   try {
-    // parameters exists
-    // valid parameters
-    // username exists
     let user_details = {
       username: req.body.username,
       firstname: req.body.firstname,
@@ -20,10 +17,12 @@ router.post("/Register", async (req, res, next) => {
     let users = [];
     users = await DButils.execQuery("SELECT username from users");
 
-    if (users.find((x) => x.username === user_details.username))
-      return res.status(409).send({
-        message: `Username -> ${user_details.username} is already taken!`, error: true
-      });
+    if (users.find((x) => x.username === user_details.username)){
+      throw {
+        status: 409,
+        message: `Username -> ${user_details.username} is already taken!`,
+      }
+    }
 
     // add the new username
     let hash_password = bcrypt.hashSync(
@@ -44,7 +43,7 @@ router.post("/Register", async (req, res, next) => {
         user_details.email,
       ]
     );
-    return res.status(201).send({
+    res.status(201).send({
       message: `user with username -> ${user_details.username} created successfully!`, success: true
     });
   } catch (error) {
@@ -55,10 +54,10 @@ router.post("/Register", async (req, res, next) => {
 router.post("/Login", async (req, res, next) => {
   try {
     if (req.session.user_id) {
-      return res.status(400).send({
-        message: "User logged in successfully!",
-        error: true,
-      });
+      throw{ 
+        status: 400,
+        message: "You are already logged in",
+      }
     }
     // check that username exists
     const users = await DButils.execQuery(
@@ -66,19 +65,19 @@ router.post("/Login", async (req, res, next) => {
       [req.body.username]
     );
     if (users.length === 0) {
-      return res.status(401).send({
+      throw{
+        status: 401,
         message: "Username or Password incorrect",
-        error: true,
-      });
+      }
     }
     // check that the password is correct
     // const user = users.find((u) => u.username === req.body.username);
     const user = users[0];
     if (!bcrypt.compareSync(req.body.password, user.password)) {
-      return res.status(401).send({
+      throw{
+        status: 401,
         message: "Username or Password incorrect",
-        error: true,
-      });
+      }
     }
 
     // Set cookie
@@ -86,7 +85,7 @@ router.post("/Login", async (req, res, next) => {
     console.log("session user_id login: " + req.session.user_id);
 
     // return cookie
-    return res.status(202).send({ 
+    res.status(202).send({ 
       message: "login succeeded ", success: true 
     });
   } catch (error) {
@@ -97,14 +96,14 @@ router.post("/Login", async (req, res, next) => {
 router.post("/Logout", function (req, res, next) {
   try {
     if (!req.session.user_id) {
-      return res.status(401).send({
+      throw{
+        status: 401,
         message: "You are not logged in",
-        error: true,
-      });
+      }
     }
     console.log("session user_id Logout: " + req.session.user_id);
     req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
-    return res.status(200).send({ 
+    res.status(200).send({ 
       success: true, message: "logout succeeded" 
     });
   } catch (error) {
