@@ -36,32 +36,32 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + "/index.html");
 });
 
-// app.use(cors());
-// app.options("*", cors());
+app.use(cors());
+app.options("*", cors());
 
-// const corsConfig = {
-//   origin: true,
-//   credentials: true,
-// };
-const allowedOrigins = [
-  "http://localhost:" + process.env.PORT,
-  "http://127.0.0.1:" + process.env.PORT,
-];
-console.log("allowedOrigins: ", allowedOrigins);
 const corsConfig = {
-  origin: (origin, callback) => {
-    // allow non-browser tools (no origin) or our two hosts
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true,
   credentials: true,
 };
+// const allowedOrigins = [
+//   "http://localhost:" + process.env.PORT,
+//   "http://127.0.0.1:" + process.env.PORT,
+// ];
+// console.log("allowedOrigins: ", allowedOrigins);
+// const corsConfig = {
+//   origin: (origin, callback) => {
+//     // allow non-browser tools (no origin) or our two hosts
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+// };
 
-app.use(cors(corsConfig));
-app.options("*", cors(corsConfig));
+// app.use(cors(corsConfig));
+// app.options("*", cors(corsConfig));
 
 var port = process.env.PORT || "3000"; //local=3000 remote=80
 //#endregion

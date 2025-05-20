@@ -309,7 +309,7 @@ async function addFamilyRecipe(
   instructions,
   image
 ) {
-  await DButils.execQuery(
+  const result=await DButils.execQuery(
     `INSERT INTO familyrecipes 
        (user_id, family_member, occasion, ingredients, instructions, image)
      VALUES (?, ?, ?, ?, ?, ?)`,
@@ -322,6 +322,7 @@ async function addFamilyRecipe(
       image,
     ]
   );
+  return result.insertId;
 }
 
 async function deleteFamilyRecipe(userId, familyRecipeId) {

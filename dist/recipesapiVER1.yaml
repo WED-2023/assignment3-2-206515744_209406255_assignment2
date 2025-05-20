@@ -481,13 +481,13 @@ paths:
           description: >
             Successfully returned recipe. If the 'full' query parameter is true, 
             the response will match the FullRecipe schema. Otherwise, it will match 
-            the PreviewRecipe schema.If the user is not logged in, then the recipe 'viewed','favorite' attributes will not be included.
+            the RecipePreview schema.If the user is not logged in, then the recipe 'viewed','favorite' attributes will not be included.
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/FullRecipe"
-                  - $ref: "#/components/schemas/PreviewRecipe"
+                  - $ref: "#/components/schemas/RecipePreview"
         401:
           description: "There is no such user id in the system"
           content:
