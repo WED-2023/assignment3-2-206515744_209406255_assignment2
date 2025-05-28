@@ -12,11 +12,39 @@ async function getUserIDFromUsername(username) {
   );
   return rows[0]?.user_id;
 }
+//
+// ——— Liked ———
+//
 
+async function deleteUserLiked(userId, recipeId) {
+  await DButils.execQuery(
+    `DELETE FROM likedrecipes WHERE user_id = ? AND recipe_id = ?`,
+    [userId, recipeId]
+  );
+}
+async function getLikedRecipes(userId,recipeId){
+  const rows = await DButils.execQuery(
+    `SELECT recipe_id FROM likedrecipes WHERE user_id = ?`,
+    [userId]
+  );
+  return rows.map((r) => r.recipe_id);
+}
+async function markAsLiked(userId,recipeId){
+  await DButils.execQuery(
+    `INSERT INTO likedrecipes (user_id, recipe_id) VALUES (?, ?)`,
+    [userId, recipeId]
+  );
+}
+async function isRecipeLiked(userId,recipeId){
+   const rows = await DButils.execQuery(
+    `SELECT 1 FROM likedrecipes WHERE user_id = ? AND recipe_id = ? LIMIT 1`,
+    [userId, recipeId]
+  );
+  return rows.length > 0;
+}
 //
 // ——— Favorites ———
 //
-
 async function markAsFavorite(userId, recipeId) {
   await DButils.execQuery(
     `INSERT INTO favoriterecipes (user_id, recipe_id) VALUES (?, ?)`,
@@ -96,14 +124,13 @@ async function deleteLastViewed(userId, recipeId) {
 async function addUserRecipe(userId, details) {
   const result = await DButils.execQuery(
     `INSERT INTO myrecipes
-       (user_id, title, image, readyInMinutes, aggregateLikes, vegan, vegetarian, glutenFree, numberOfPortions, summary)
+       (user_id, title, image, readyInMinutes, vegan, vegetarian, glutenFree, numberOfPortions, summary)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       userId,
       details.title,
       details.image,
       details.readyInMinutes,
-      details.aggregateLikes,
       details.vegan ? 1 : 0,
       details.vegetarian ? 1 : 0,
       details.glutenFree ? 1 : 0,
@@ -152,7 +179,7 @@ async function addEquipments(userId, recipeId, equipments) {
 
 async function getUserRecipes(userId) {
   const rows = await DButils.execQuery(
-    `SELECT recipe_id, title, image, readyInMinutes, aggregateLikes, vegan, vegetarian, glutenFree
+    `SELECT recipe_id, title, image, readyInMinutes, vegan, vegetarian, glutenFree
        FROM myrecipes
       WHERE user_id = ?`,
     [userId]
@@ -162,7 +189,6 @@ async function getUserRecipes(userId) {
     title: r.title,
     image: r.image,
     readyInMinutes: r.readyInMinutes,
-    aggregateLikes: r.aggregateLikes,
     vegan: !!r.vegan,
     vegetarian: !!r.vegetarian,
     glutenFree: !!r.glutenFree,
@@ -210,7 +236,6 @@ async function getUserRecipeDetails(userId, recipeId, recipe) {
     title: recipe.title,
     image: recipe.image,
     readyInMinutes: recipe.readyInMinutes,
-    aggregateLikes: recipe.aggregateLikes,
     vegan: !!recipe.vegan,
     vegetarian: !!recipe.vegetarian,
     glutenFree: !!recipe.glutenFree,
@@ -333,6 +358,10 @@ async function deleteFamilyRecipe(userId, familyRecipeId) {
 }
 
 module.exports = {
+  deleteUserLiked,
+  getLikedRecipes,
+  markAsLiked,
+  isRecipeLiked,
   getUserIDFromUsername,
   markAsFavorite,
   deleteUserFavorite,

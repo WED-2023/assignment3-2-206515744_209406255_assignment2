@@ -27,11 +27,15 @@ app.use(express.static(path.join(__dirname, "public"))); //To serve static files
 //local:
 //app.use(express.static(path.join(__dirname, "dist")));
 //remote:
- app.use(express.static(path.join(__dirname, '../assignment3_3-frontend-main/dist')));
+app.use(
+  express.static(path.join(__dirname, "../assignment3_3-frontend-main/dist"))
+);
 
 app.get("/", function (req, res) {
   //remote:
-  res.sendFile(path.join(__dirname, '../assignment-3-3-frontend-main/dist/index.html'));
+  res.sendFile(
+    path.join(__dirname, "../assignment-3-3-frontend-main/dist/index.html")
+  );
   //local:
   //res.sendFile(__dirname + "/index.html");
   req.session.reset(); //TO MAKE SURE THE SESSION IS EMPTY EACH NEW LOGIN can be removed later
@@ -44,7 +48,6 @@ const corsConfig = {
   origin: true,
   credentials: true,
 };
-
 
 var port = process.env.PORT || "3000"; //local=3000 remote=80
 //#endregion
@@ -90,14 +93,14 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500).send({ message: err.message, success: false });
 });
 
-// const server = app.listen(port, () => {
-//   console.log(`Server listen on port ${port}`);
-// });
+const server = app.listen(port, () => {
+  console.log(`Server listen on port ${port}`);
+});
 
-// process.on("SIGINT", function () {
-//   if (server) {
-//     server.close(() => console.log("server closed"));
-//   }
-//   process.exit();
-// });
-module.exports=app;
+process.on("SIGINT", function () {
+  if (server) {
+    server.close(() => console.log("server closed"));
+  }
+  process.exit();
+});
+module.exports = app;

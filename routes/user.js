@@ -24,6 +24,84 @@ router.use(async (req, res, next) => {
     next(err);
   }
 });
+// POST /users/liked
+router.post("/liked", async (req, res, next) => {
+  try {
+    const recipe_id  = req.body.recipe_id;
+    const user_id = req.user_id;
+    if (recipe_id === undefined || recipe_id === null) {
+      throw {status: 400, message: "Missing recipe_id"};
+    }
+    try {
+      await recipe_utils.getRecipeInformation(recipe_id);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        throw {
+          status: 404,
+          message: `Recipe ${recipe_id} not found.`,
+        };
+      }
+    }
+    const isLiked = await user_utils.isRecipeLiked(user_id, recipe_id);
+    if (isLiked) {
+      throw {
+        status: 400,
+        message: `Recipe ${recipe_id} is already liked.`,
+      };
+    }
+    await user_utils.markAsLiked(user_id, recipe_id);
+    res
+      .status(201)
+      .send({ message: `Recipe ${recipe_id} liked`, success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+// GET /users/liked
+router.get("/liked", async (req, res, next) => {
+  try {
+    const user_id = req.user_id;
+    const LikedIds = await user_utils.getLikedRecipes(user_id);
+    const recipes = await recipe_utils.getRecipesDetails(LikedIds);
+    // Enrich with viewed and favorite flags
+    for (const recipe of recipes) {
+      recipe.viewed = await user_utils.isRecipeViewed(user_id, recipe.id);
+      recipe.spoonacularScore = recipe.spoonacularScore + 1;
+    }
+    res.status(200).send(recipes);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /users/liked
+router.delete("/liked", async (req, res, next) => {
+  try {
+    const recipe_id  = req.body.recipe_id;
+    const user_id = req.user_id;
+    if (recipe_id === undefined || recipe_id === null) {
+      throw {
+        status: 400,
+        message: "Missing recipe_id",
+      };
+    }
+    const isLiked = await user_utils.isRecipeLiked(user_id, recipe_id);
+    if (!isLiked) {
+      throw {
+        status: 404,
+        message: `Recipe ${recipe_id} not Liked.`,
+      };
+    }
+    await user_utils.deleteUserLiked(user_id, recipe_id);
+    res
+      .status(200)
+      .send({ message: `Recipe ${recipe_id} removed from Liked`, success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 
 // POST /users/favorites
 router.post("/favorites", async (req, res, next) => {
@@ -164,7 +242,6 @@ router.post("/my-recipes", async (req, res, next) => {
     // add recipe
     const recipeDetails = {
       ...recipe,
-      aggregateLikes: 0,
       vegan: recipe.vegan ? 1 : 0,
       vegetarian: recipe.vegetarian ? 1 : 0,
       glutenFree: recipe.glutenFree ? 1 : 0,

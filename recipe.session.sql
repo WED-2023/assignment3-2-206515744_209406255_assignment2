@@ -19,7 +19,6 @@ CREATE TABLE myrecipes (
   title VARCHAR(255),
   image TEXT,
   readyInMinutes INT,
-  aggregateLikes INT,
   vegan BOOLEAN,
   vegetarian BOOLEAN,
   glutenFree BOOLEAN,
@@ -48,6 +47,12 @@ CREATE TABLE mealplan (
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
 CREATE TABLE favoriterecipes(
+  user_id INT NOT NULL,
+  recipe_id INT NOT NULL,
+  PRIMARY KEY (user_id, recipe_id),
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+CREATE TABLE likedrecipes (
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,
   PRIMARY KEY (user_id, recipe_id),

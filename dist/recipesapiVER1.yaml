@@ -203,6 +203,118 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
+  /users/liked:
+    get:
+      tags:
+        - Users
+      summary: Get users liked recipes
+      description: Return all the liked recipes of the specified user name.
+      responses:
+        200:
+          description: Return user liked recipes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecipePreview"
+        401:
+          description: User is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+    post:
+      tags:
+        - Users
+      summary: Add a recipe to the user's liked list
+      description: Add a recipe to the user's liked list, creating the list if it doesn't exist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipe_id
+              properties:
+                recipe_id:
+                  type: integer
+                  description: The unique ID of the recipe
+      responses:
+        201:
+          description: Recipe successfully added to the user's liked list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        400:
+          description: recipe id already saved as liked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+        401:
+          description: User is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: recipe id don't exist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user recipe from the user's liked list
+      description: Delete a recipe from the user's liked list. Must specify the recipe id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipe_id
+              properties:
+                recipe_id:
+                  type: integer
+                  description: The unique ID of the user recipe
+
+      responses:
+        200:
+          description: Recipe successfully removed from the user's liked list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+
+        400:
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: User or recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+
   /users/favorites:
     get:
       tags:
@@ -289,7 +401,7 @@ paths:
 
       responses:
         200:
-          description: Recipe successfully added to the user's favorites list
+          description: Recipe successfully removed from the user's favorites list
           content:
             application/json:
               schema:
