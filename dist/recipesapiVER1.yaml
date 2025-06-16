@@ -1003,7 +1003,7 @@ components:
           maxLength: 10
           format: password
           description: >
-            user's passwords contains betweeb 5 to 20 chars,
+            user's passwords contains betweeb 5 to 10 chars,
             contains at least one number and special char
           example: il@1gav
 
