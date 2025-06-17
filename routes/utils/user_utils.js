@@ -250,7 +250,18 @@ async function getUserRecipeDetails(userId, recipeId, recipe) {
 }
 
 async function deleteUserRecipe(userId, recipeId) {
-  
+  await DButils.execQuery(
+    `DELETE FROM recipeingredients WHERE user_id = ? AND recipe_id = ?`,
+    [userId, recipeId]
+  );
+  await DButils.execQuery(
+    `DELETE FROM recipeinstructions WHERE user_id = ? AND recipe_id = ?`,
+    [userId, recipeId]
+  );
+  await DButils.execQuery(
+    `DELETE FROM recipeequipments WHERE user_id = ? AND recipe_id = ?`,
+    [userId, recipeId]
+  );
   await DButils.execQuery(
     `DELETE FROM myrecipes WHERE user_id = ? AND recipe_id = ?`,
     [userId, recipeId]
