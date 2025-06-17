@@ -125,7 +125,7 @@ async function addUserRecipe(userId, details) {
   const result = await DButils.execQuery(
     `INSERT INTO myrecipes
        (user_id, title, image, readyInMinutes, vegan, vegetarian, glutenFree, numberOfPortions, summary)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       userId,
       details.title,
