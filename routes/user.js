@@ -390,7 +390,7 @@ router.post("/family-recipes", async (req, res, next) => {
 // DELETE /users/family-recipes
 router.delete("/family-recipes", async (req, res, next) => {
   try {
-    const familyrecipe_id  = req.body_recipe_id;
+    const familyrecipe_id  = req.body.recipe_id;
     if (familyrecipe_id === undefined || familyrecipe_id === null) {
       throw {
         status: 400,
