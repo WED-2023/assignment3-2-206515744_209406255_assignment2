@@ -181,7 +181,7 @@ router.delete("/favorites", async (req, res, next) => {
 // POST /users/last-view
 router.post("/last-view", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
@@ -218,11 +218,11 @@ router.get("/last-view", async (req, res, next) => {
     const limit = parseInt(req.query.number, 10) || 3;
     const user_id = req.user_id;
     const viewedIds = await user_utils.getLastViewed(user_id, limit);
-    let recipes = await recipe_utils.getRecipesDetails(viewedIds);
-    // replace per‐recipe loop:
-    recipes = await recipe_utils.enrichRecipesWithUserInfo(user_id, recipes);
-    // but ensure viewed flag is always true:
-    recipes = recipes.map((r) => ({ ...r, viewed: true }));
+    const recipes = await recipe_utils.getRecipesDetails(viewedIds);
+    for (const recipe of recipes) {
+      recipe.viewed = true;
+      recipe.favorite = await user_utils.isRecipeFavorite(user_id, recipe.id);
+    }
     res.status(200).send(recipes);
   } catch (err) {
     next(err);
