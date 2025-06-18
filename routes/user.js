@@ -184,7 +184,7 @@ router.delete("/favorites", async (req, res, next) => {
 // POST /users/last-view
 router.post("/last-view", async (req, res, next) => {
   try {
-    const recipe_id  = req.body_recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
@@ -221,6 +221,22 @@ router.post("/last-view", async (req, res, next) => {
 router.get("/last-view", async (req, res, next) => {
   try {
     const limit = parseInt(req.query.number, 10) || 3;
+    const user_id = req.user_id;
+    const viewedIds = await user_utils.getLastViewed(user_id, limit);
+    const recipes = await recipe_utils.getRecipesDetails(viewedIds);
+    for (const recipe of recipes) {
+      recipe.viewed = true;
+      recipe.favorite = await user_utils.isRecipeFavorite(user_id, recipe.id);
+    }
+    res.status(200).send(recipes);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/last-view/:recipe_id", async (req, res, next) => {
+  try {
+    const recipe_id = req.params.recipe_id;
     const user_id = req.user_id;
     const viewedIds = await user_utils.getLastViewed(user_id, limit);
     const recipes = await recipe_utils.getRecipesDetails(viewedIds);
