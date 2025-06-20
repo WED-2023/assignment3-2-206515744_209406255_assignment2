@@ -9,14 +9,14 @@ router.use(async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
     if (!user_id) {
-      throw { status: 401, message: "Unauthorized" };
+      throw {status: 401, message: "Unauthorized"};
     }
     const users = await DButils.execQuery(
       "SELECT user_id FROM users WHERE user_id = ?",
       [user_id]
     );
     if (users.length === 0) {
-      throw { status: 401, message: "User not found" };
+      throw {status: 401, message: "User not found"};
     }
     req.user_id = user_id;
     next();
@@ -27,10 +27,10 @@ router.use(async (req, res, next) => {
 // POST /users/liked
 router.post("/liked", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
-      throw { status: 400, message: "Missing recipe_id" };
+      throw {status: 400, message: "Missing recipe_id"};
     }
     try {
       await recipe_utils.getRecipeInformation(recipe_id);
@@ -61,12 +61,13 @@ router.post("/liked", async (req, res, next) => {
 router.get("/liked", async (req, res, next) => {
   try {
     const user_id = req.user_id;
-    const likedIds = await user_utils.getLikedRecipes(user_id);
-    let recipes = await recipe_utils.getRecipesDetails(likedIds);
-    // old code removed:
-    // for (const r of recipes) { … }
-    // use batch helper instead:
-    recipes = await recipe_utils.enrichRecipesWithUserInfo(user_id, recipes);
+    const LikedIds = await user_utils.getLikedRecipes(user_id);
+    const recipes = await recipe_utils.getRecipesDetails(LikedIds);
+    // Enrich with viewed and favorite flags
+    for (const recipe of recipes) {
+      recipe.viewed = await user_utils.isRecipeViewed(user_id, recipe.id);
+      recipe.spoonacularScore = recipe.spoonacularScore + 1;
+    }
     res.status(200).send(recipes);
   } catch (err) {
     next(err);
@@ -76,7 +77,7 @@ router.get("/liked", async (req, res, next) => {
 // DELETE /users/liked
 router.delete("/liked", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
@@ -92,22 +93,23 @@ router.delete("/liked", async (req, res, next) => {
       };
     }
     await user_utils.deleteUserLiked(user_id, recipe_id);
-    res.status(200).send({
-      message: `Recipe ${recipe_id} removed from Liked`,
-      success: true,
-    });
+    res
+      .status(200)
+      .send({ message: `Recipe ${recipe_id} removed from Liked`, success: true });
   } catch (err) {
     next(err);
   }
 });
 
+
+
 // POST /users/favorites
 router.post("/favorites", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
-      throw { status: 400, message: "Missing recipe_id" };
+      throw {status: 400, message: "Missing recipe_id"};
     }
     try {
       await recipe_utils.getRecipeInformation(recipe_id);
@@ -127,10 +129,9 @@ router.post("/favorites", async (req, res, next) => {
       };
     }
     await user_utils.markAsFavorite(user_id, recipe_id);
-    res.status(201).send({
-      message: `Recipe ${recipe_id} added to favorites`,
-      success: true,
-    });
+    res
+      .status(201)
+      .send({ message: `Recipe ${recipe_id} added to favorites`, success: true });
   } catch (err) {
     next(err);
   }
@@ -140,10 +141,13 @@ router.post("/favorites", async (req, res, next) => {
 router.get("/favorites", async (req, res, next) => {
   try {
     const user_id = req.user_id;
-    const favIds = await user_utils.getFavoriteRecipes(user_id);
-    let recipes = await recipe_utils.getRecipesDetails(favIds);
-    // drop manual loop, use helper:
-    recipes = await recipe_utils.enrichRecipesWithUserInfo(user_id, recipes);
+    const favoriteIds = await user_utils.getFavoriteRecipes(user_id);
+    const recipes = await recipe_utils.getRecipesDetails(favoriteIds);
+    // Enrich with viewed and favorite flags
+    for (const recipe of recipes) {
+      recipe.viewed = await user_utils.isRecipeViewed(user_id, recipe.id);
+      recipe.favorite = true;
+    }
     res.status(200).send(recipes);
   } catch (err) {
     next(err);
@@ -153,7 +157,7 @@ router.get("/favorites", async (req, res, next) => {
 // DELETE /users/favorites
 router.delete("/favorites", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
@@ -169,10 +173,9 @@ router.delete("/favorites", async (req, res, next) => {
       };
     }
     await user_utils.deleteUserFavorite(user_id, recipe_id);
-    res.status(200).send({
-      message: `Recipe ${recipe_id} removed from favorites`,
-      success: true,
-    });
+    res
+      .status(200)
+      .send({ message: `Recipe ${recipe_id} removed from favorites`, success: true });
   } catch (err) {
     next(err);
   }
@@ -181,13 +184,14 @@ router.delete("/favorites", async (req, res, next) => {
 // POST /users/last-view
 router.post("/last-view", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     const user_id = req.user_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
         status: 400,
         message: "Missing recipe_id",
       };
+     
     }
     try {
       await recipe_utils.getRecipeInformation(recipe_id);
@@ -197,6 +201,7 @@ router.post("/last-view", async (req, res, next) => {
           status: 404,
           message: `Recipe ${recipe_id} not found.`,
         };
+       
       }
       throw error;
     }
@@ -218,11 +223,11 @@ router.get("/last-view", async (req, res, next) => {
     const limit = parseInt(req.query.number, 10) || 3;
     const user_id = req.user_id;
     const viewedIds = await user_utils.getLastViewed(user_id, limit);
-    let recipes = await recipe_utils.getRecipesDetails(viewedIds);
-    // replace per‐recipe loop:
-    recipes = await recipe_utils.enrichRecipesWithUserInfo(user_id, recipes);
-    // but ensure viewed flag is always true:
-    recipes = recipes.map((r) => ({ ...r, viewed: true }));
+    const recipes = await recipe_utils.getRecipesDetails(viewedIds);
+    for (const recipe of recipes) {
+      recipe.viewed = true;
+      recipe.favorite = await user_utils.isRecipeFavorite(user_id, recipe.id);
+    }
     res.status(200).send(recipes);
   } catch (err) {
     next(err);
@@ -261,11 +266,10 @@ router.post("/my-recipes", async (req, res, next) => {
     await user_utils.addIngredients(user_id, recipe_id, recipe.ingredients);
     await user_utils.addInstructions(user_id, recipe_id, recipe.instructions);
     await user_utils.addEquipments(user_id, recipe_id, recipe.equipment);
-
-    res.status(201).send({
-      message: `Recipe ${recipe_id} added to user recipes`,
-      success: true,
-    });
+    
+    res
+      .status(201)
+      .send({ message: `Recipe ${recipe_id} added to user recipes`, success: true });
   } catch (err) {
     next(err);
   }
@@ -298,7 +302,7 @@ router.get("/my-recipes/:recipe_id", async (req, res, next) => {
 // DELETE /users/my-recipes
 router.delete("/my-recipes", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const  recipe_id  = req.body.recipe_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
         status: 400,
@@ -306,10 +310,9 @@ router.delete("/my-recipes", async (req, res, next) => {
       };
     }
     await user_utils.deleteUserRecipe(req.user_id, recipe_id);
-    return res.status(200).send({
-      message: `Recipe ${recipe_id} removed from user recipes`,
-      success: true,
-    });
+    return res
+      .status(200)
+      .send({ message: `Recipe ${recipe_id} removed from user recipes`, success: true });
   } catch (err) {
     next(err);
   }
@@ -328,7 +331,7 @@ router.get("/meal-plan", async (req, res, next) => {
 // POST /users/meal-plan
 router.post("/meal-plan", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const recipe_id  = req.body.recipe_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
         status: 400,
@@ -336,10 +339,9 @@ router.post("/meal-plan", async (req, res, next) => {
       };
     }
     await user_utils.addMealPlan(req.user_id, recipe_id);
-    res.status(200).send({
-      message: `Recipe ${recipe_id} added to meal plan`,
-      success: true,
-    });
+    res
+      .status(200)
+      .send({ message: `Recipe ${recipe_id} added to meal plan`, success: true });
   } catch (err) {
     next(err);
   }
@@ -348,7 +350,7 @@ router.post("/meal-plan", async (req, res, next) => {
 // DELETE /users/meal-plan
 router.delete("/meal-plan", async (req, res, next) => {
   try {
-    const recipe_id = req.body.recipe_id;
+    const  recipe_id  = req.body.recipe_id;
     if (recipe_id === undefined || recipe_id === null) {
       throw {
         status: 400,
@@ -356,10 +358,9 @@ router.delete("/meal-plan", async (req, res, next) => {
       };
     }
     await user_utils.deleteMealPlan(req.user_id, recipe_id);
-    res.status(200).send({
-      message: `Recipe ${recipe_id} removed from meal plan`,
-      success: true,
-    });
+    res
+      .status(200)
+      .send({ message: `Recipe ${recipe_id} removed from meal plan`, success: true });
   } catch (err) {
     next(err);
   }
@@ -386,7 +387,7 @@ router.post("/family-recipes", async (req, res, next) => {
         message: "Missing required fields",
       };
     }
-    const familyrecipe_id = await user_utils.addFamilyRecipe(
+    const familyrecipe_id=await user_utils.addFamilyRecipe(
       req.user_id,
       family_member,
       occasion,
@@ -394,10 +395,9 @@ router.post("/family-recipes", async (req, res, next) => {
       instructions,
       image
     );
-    res.status(201).send({
-      message: `Family recipe ${familyrecipe_id}  added`,
-      success: true,
-    });
+    res
+      .status(201)
+      .send({ message: `Family recipe ${familyrecipe_id}  added`, success: true });
   } catch (err) {
     next(err);
   }
@@ -406,7 +406,7 @@ router.post("/family-recipes", async (req, res, next) => {
 // DELETE /users/family-recipes
 router.delete("/family-recipes", async (req, res, next) => {
   try {
-    const familyrecipe_id = req.body.recipe_id;
+    const familyrecipe_id  = req.body.recipe_id;
     if (familyrecipe_id === undefined || familyrecipe_id === null) {
       throw {
         status: 400,
@@ -414,10 +414,9 @@ router.delete("/family-recipes", async (req, res, next) => {
       };
     }
     await user_utils.deleteFamilyRecipe(req.user_id, familyrecipe_id);
-    res.status(200).send({
-      message: `Family recipe ${familyrecipe_id} removed`,
-      success: true,
-    });
+    res
+      .status(200)
+      .send({ message: `Family recipe ${familyrecipe_id} removed`, success: true });
   } catch (err) {
     next(err);
   }

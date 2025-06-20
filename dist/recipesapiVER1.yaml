@@ -16,40 +16,45 @@ tags:
   - name: Users
     description: "Personal resources (favorites, history, own recipes)"
 paths:
-  /login:
+  /Login:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: user try to login
+      description: check if the user authntication details are correct.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/LoginUser"
+        description: User details to sign in
       responses:
-        "200":
-          description: credentials valid
+        202:
+          description: users details are valid.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
-        "400":
-          description: already logged in
+        400:
+          description: already logged in.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
-        "401":
-          description: invalid credentials
+        401:
+          description: username or password is incorrect
           content:
-            application/json:
+            applicatiom/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
-  /register:
+  /Register:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: user sign up
+      description: user sends all the required details to sign up for the website.
       requestBody:
         required: true
         content:
@@ -57,96 +62,112 @@ paths:
             schema:
               $ref: "#/components/schemas/RegisterUser"
       responses:
-        "201":
-          description: created
+        201:
+          description: user signed up successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
-        "409":
-          description: username taken
+        409:
+          description: username is taken.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
-  /logout:
+  /Logout:
     post:
-      tags: [Auth]
-      summary: logout user
+      tags:
+        - Auth
+      summary: logout user from the system.
+      description: user logged out from the website and his cookie been deleted.
       responses:
-        "200":
-          description: logged out
+        200:
+          description: user logged out successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
-        "401":
-          description: not logged in
+        401:
+          description: user wasn't logged in.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
-
   /users/last-view:
     get:
-      tags: [Users]
-      summary: Get last viewed
+      tags:
+        - Users
+      summary: Get the user last viewed recipes.
+      description: Return the last recipe pages that the user watched. You can specify the exact number of last pages you need(default number is 3). If there are fewer pages than the number specified, then return all last viewed existing pages.
       parameters:
         - name: number
           in: query
+          required: false
+          description: The required number of last viewed pages.
           schema:
             type: integer
-            default: 3
+            example: 3
+
       responses:
-        "200":
-          description: array of last viewed previews
+        200:
+          description: return an array of the number specified last viewed pages.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/RecipePreview"
+        401:
+          description: User is not logged in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
     post:
-      tags: [Users]
-      summary: Add a recipe to last‐view
+      tags:
+        - Users
+      summary: Add a recipe to the user's last viewed list
+      description: Add a recipe to the user's last viewed list, creating the list if it doesn't exist.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [recipe_id]
+              required:
+                - recipe_id
               properties:
                 recipe_id:
                   type: integer
+                  description: The unique ID of the recipe
       responses:
-        "201":
-          $ref: "#/components/schemas/SuccessMessage"
-        "400":
-          $ref: "#/components/schemas/ErrorMessage"
-        "404":
-          $ref: "#/components/schemas/ErrorMessage"
-
-  /users/last-view/{recipe_id}:
-    get:
-      tags: [Users]
-      summary: Get one last‐viewed recipe
-      parameters:
-        - name: recipe_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: single RecipePreview with viewed=true
+        201:
+          description: Recipe successfully added to the user's last viewed list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecipePreview"
-        "404":
-          $ref: "#/components/schemas/ErrorMessage"
+                $ref: "#/components/schemas/SuccessMessage"
+
+        400:
+          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        401:
+          description: User is not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: User or recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 
   /recipes/random:
     get:
