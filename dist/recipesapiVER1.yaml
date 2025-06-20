@@ -1084,6 +1084,11 @@ components:
           format: email
           description: user's email
           example: ilgavC@gmail.com
+        profilePic:
+          type: string
+          format: uri
+          description: Optional URL for user profile picture
+          example: https://www.example.com/default-profile.png
 
     UserDetails:
       type: string

@@ -6,6 +6,7 @@ var logger = require("morgan");
 const session = require("client-sessions");
 const DButils = require("./routes/utils/DButils");
 var cors = require("cors");
+const axios = require("axios"); // for proxying external APIs
 
 var app = express();
 app.use(logger("dev")); //logger
@@ -42,12 +43,13 @@ app.get("/", function (req, res) {
 const corsConfig = {
   origin: true,
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+  allowedHeaders: ["Content-Type", "Authorization", "Accept"],
 };
 
 app.use(cors(corsConfig)); // Enable CORS for all routes
 app.options("*", cors(corsConfig)); // Preflight requests for all routes
 
+// Proxy route to fetch countries (avoids CORS issues with external API)
 
 
 var port = process.env.PORT || "3000"; //local=3000 remote=80
@@ -88,6 +90,24 @@ app.use("/users", user);
 app.use("/recipes", recipes);
 app.use("/", auth);
 
+app.get("/countries", async (req, res, next) => {
+  try {
+    // fetch from apicountries.com
+    const response = await axios.get('https://www.apicountries.com/countries');
+    // extract and sort only the country names
+    const countries = response.data
+      .map(c => c.name)
+      .sort((a, b) => a.localeCompare(b));
+
+    // return raw data
+    console.log("countries", countries);
+    res.status(200).send(countries);
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+
+    next(error);
+  }
+});
 // Default router
 app.use(function (err, req, res, next) {
   console.error(err);

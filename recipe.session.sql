@@ -96,3 +96,4 @@ create table recipeequipments (
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
 );
+

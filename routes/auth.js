@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 
 router.post("/Register", async (req, res, next) => {
   try {
+    // collect user details, including optional profilePic
     let user_details = {
       username: req.body.username,
       firstname: req.body.firstname,
@@ -13,7 +14,21 @@ router.post("/Register", async (req, res, next) => {
       country: req.body.country,
       password: req.body.password,
       email: req.body.email,
+      profilePic: req.body.profilePic, // optional URL
     };
+    // Validate profilePic if provided
+    if (user_details.profilePic) {
+      try {
+        new URL(user_details.profilePic);
+      } catch {
+        throw { status: 400, message: "Invalid profilePic URL" };
+      }
+    }
+    // use default profilePic if none provided
+    const defaultPic =
+      "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?20200418092106";
+    user_details.profilePic = user_details.profilePic || defaultPic;
+
     let users = [];
     users = await DButils.execQuery("SELECT username from users");
 
@@ -30,10 +45,9 @@ router.post("/Register", async (req, res, next) => {
       parseInt(process.env.bcrypt_saltRounds)
     );
 
+    // insert new user including profile_pic column
     await DButils.execQuery(
-      // `INSERT INTO users (username, firstname, lastname, country, password, email) VALUES ('${user_details.username}', '${user_details.firstname}', '${user_details.lastname}',
-      // '${user_details.country}', '${hash_password}', '${user_details.email}')`
-      "INSERT INTO users(username, firstname, lastname, country, password, email) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO users(username, firstname, lastname, country, password, email, profilePic) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         user_details.username,
         user_details.firstname,
@@ -41,6 +55,7 @@ router.post("/Register", async (req, res, next) => {
         user_details.country,
         hash_password,
         user_details.email,
+        user_details.profilePic,
       ]
     );
     res.status(201).send({
