@@ -886,12 +886,6 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - recipe_id
-              properties:
-                recipe_id:
-                  type: integer
-                  description: The unique ID of the recipe
 
       responses:
         200:
@@ -899,26 +893,43 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
         400:
           description: Invalid input (e.g., missing recipe_id or invalid userName)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
         401:
           description: User is not authorized.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
         404:
           description: User or recipe not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
 
+  /countries:
+    get:
+      tags:
+        - Users
+      summary: Get list of all countries
+      description: Returns an array of country names.
+      responses:
+        200:
+          description: A JSON array of country names.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        500:
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 components:
   schemas:
     MealPlan:

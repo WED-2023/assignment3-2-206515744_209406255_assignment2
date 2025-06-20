@@ -51,7 +51,6 @@ app.options("*", cors(corsConfig)); // Preflight requests for all routes
 
 // Proxy route to fetch countries (avoids CORS issues with external API)
 
-
 var port = process.env.PORT || "3000"; //local=3000 remote=80
 //#endregion
 const user = require("./routes/user");
@@ -93,15 +92,15 @@ app.use("/", auth);
 app.get("/countries", async (req, res, next) => {
   try {
     // fetch from apicountries.com
-    const response = await axios.get('https://www.apicountries.com/countries');
+    const response = await axios.get("https://www.apicountries.com/countries");
     // extract and sort only the country names
     const countries = response.data
-      .map(c => c.name)
+      .map((c) => c.name)
       .sort((a, b) => a.localeCompare(b));
 
-    // return raw data
     console.log("countries", countries);
-    res.status(200).send(countries);
+    // return plain array in data field
+    res.status(200).send({ success: true, data: countries, message: "Countries fetched successfully" });
   } catch (error) {
     console.error("Error fetching countries:", error);
 
