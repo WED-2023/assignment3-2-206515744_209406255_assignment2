@@ -92,14 +92,17 @@ async function getFullRecipeDetails(recipe_id) {
 
 async function getRandomRecipeDetails(number = 3) {
   // Use cached random recipes if available and fresh
-  if (randomRecipeCache && Date.now() - randomCacheTimestamp < RANDOM_CACHE_DURATION) {
+  if (
+    randomRecipeCache &&
+    Date.now() - randomCacheTimestamp < RANDOM_CACHE_DURATION
+  ) {
     return randomRecipeCache.slice(0, number);
   }
-  
+
   const res = await axios.get(`${api_domain}/random`, {
     params: { number: 10, apiKey: process.env.spoonacular_apiKey }, // Get more to cache
   });
-  
+
   randomRecipeCache = res.data.recipes.map((r) => ({
     id: r.id,
     title: r.title,
@@ -110,7 +113,7 @@ async function getRandomRecipeDetails(number = 3) {
     vegetarian: r.vegetarian,
     glutenFree: r.glutenFree,
   }));
-  
+
   randomCacheTimestamp = Date.now();
   return randomRecipeCache.slice(0, number);
 }
@@ -184,10 +187,15 @@ async function enrichRecipesWithUserInfo(user_id, recipes = []) {
 function extractInstructionsAndEquipment(instructionsArr = []) {
   const steps = [];
   const equipSet = new Set();
-  if (instructionsArr.length) {
-    for (const step of instructionsArr[0].steps) {
-      steps.push(step.step);
-      step.equipment.forEach((item) => equipSet.add(item.name));
+  // Collect from all instruction groups
+  for (const group of instructionsArr) {
+    if (Array.isArray(group.steps)) {
+      for (const step of group.steps) {
+        if (step.step) steps.push(step.step);
+        if (Array.isArray(step.equipment)) {
+          step.equipment.forEach((item) => equipSet.add(item.name));
+        }
+      }
     }
   }
   return { steps, equipment: Array.from(equipSet) };
