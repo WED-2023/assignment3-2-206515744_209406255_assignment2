@@ -1,11 +1,82 @@
-const axios = require("axios");
+const spoonacular = require("./spoonacular");
 const user_utils = require("./user_utils");
-const api_domain = "https://api.spoonacular.com/recipes";
+const LRU = require("lru-cache");
+
+// simple LRU cache: up to 500 entries, 1h TTL
+const recipeCache = new LRU({ max: 500, maxAge: 1000 * 60 * 60 });
+
+/**
+ * Fetch recipe info, using cache if available
+ */
+async function getRecipeInformationCached(recipe_id) {
+  if (recipeCache.has(recipe_id)) {
+    return recipeCache.get(recipe_id);
+  }
+  const data = await getRecipeInformation(recipe_id);
+  recipeCache.set(recipe_id, data);
+  return data;
+}
+
+/**
+ * Bulk fetch via Spoonacular
+ */
+async function getRecipesInformationBulk(ids = []) {
+  if (!ids.length) return [];
+  const { data } = await spoonacular.get(`${api_domain}/informationBulk`, {
+    params: {
+      ids: ids.join(","),
+      includeNutrition: false,
+      apiKey: process.env.spoonacular_apiKey,
+    },
+  });
+  // cache each result
+  data.forEach((r) => recipeCache.set(r.id, r));
+  return data;
+}
+
+/**
+ * Override to use bulk when possible
+ */
+async function getRecipesDetails(recipesIdList = []) {
+  // use bulk if list > 1
+  const infos =
+    recipesIdList.length > 1
+      ? await getRecipesInformationBulk(recipesIdList)
+      : [await getRecipeInformationCached(recipesIdList[0])];
+  return infos.map((data) => {
+    const {
+      id,
+      title,
+      readyInMinutes,
+      image,
+      spoonacularScore,
+      vegan,
+      vegetarian,
+      glutenFree,
+    } = data;
+    return {
+      id,
+      title,
+      readyInMinutes,
+      image,
+      spoonacularScore,
+      vegan,
+      vegetarian,
+      glutenFree,
+    };
+  });
+}
 
 async function getRecipeInformation(recipe_id) {
-  const response = await axios.get(`${api_domain}/${recipe_id}/information`, {
-    params: { includeNutrition: false, apiKey: process.env.spoonacular_apiKey },
-  });
+  const response = await spoonacular.get(
+    `${api_domain}/${recipe_id}/information`,
+    {
+      params: {
+        includeNutrition: false,
+        apiKey: process.env.spoonacular_apiKey,
+      },
+    }
+  );
   return response.data;
 }
 
@@ -71,7 +142,7 @@ async function getFullRecipeDetails(recipe_id) {
 }
 
 async function getRandomRecipeDetails(number = 3) {
-  const res = await axios.get(`${api_domain}/random`, {
+  const res = await spoonacular.get(`${api_domain}/random`, {
     params: { number, apiKey: process.env.spoonacular_apiKey },
   });
   return res.data.recipes.map((r) => ({
@@ -88,7 +159,7 @@ async function getRandomRecipeDetails(number = 3) {
 
 async function getSearchRecipeDetails(params = {}, numberOfResults = 5) {
   console.log("params", params);
-  const { data } = await axios.get(`${api_domain}/complexSearch`, {
+  const { data } = await spoonacular.get(`${api_domain}/complexSearch`, {
     params: { ...params, apiKey: process.env.spoonacular_apiKey },
   });
   console.log("data", data);
@@ -125,17 +196,20 @@ async function getSearchRecipeDetails(params = {}, numberOfResults = 5) {
   return recipes;
 }
 
-async function getRecipesDetails(recipesIdList = []) {
-  return Promise.all(recipesIdList.map((id) => getRecipeDetails(id)));
-}
-
 async function enrichRecipesWithUserInfo(user_id, recipes = []) {
-  if (!user_id) return recipes;
-  for (const recipe of recipes) {
-    recipe.viewed = await user_utils.isRecipeViewed(user_id, recipe.id);
-    recipe.favorite = await user_utils.isRecipeFavorite(user_id, recipe.id);
-  }
-  return recipes;
+  if (!user_id || recipes.length === 0) return recipes;
+  // collect all ids and fetch flags in one query
+  const ids = recipes.map((r) => r.id);
+  const { viewedSet, favoriteSet } = await user_utils.getRecipesStatus(
+    user_id,
+    ids
+  );
+  // annotate each recipe from the two Sets
+  return recipes.map((r) => ({
+    ...r,
+    viewed: viewedSet.has(r.id),
+    favorite: favoriteSet.has(r.id),
+  }));
 }
 
 function extractInstructionsAndEquipment(instructionsArr = []) {
@@ -180,7 +254,7 @@ function replaceHref(text = "") {
 }
 
 module.exports = {
-  getRecipeInformation,
+  getRecipeInformation: getRecipeInformationCached, // swap in cached version
   getRecipeDetails,
   getFullRecipeDetails,
   getRandomRecipeDetails,

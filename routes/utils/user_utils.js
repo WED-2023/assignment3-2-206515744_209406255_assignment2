@@ -22,21 +22,21 @@ async function deleteUserLiked(userId, recipeId) {
     [userId, recipeId]
   );
 }
-async function getLikedRecipes(userId,recipeId){
+async function getLikedRecipes(userId, recipeId) {
   const rows = await DButils.execQuery(
     `SELECT recipe_id FROM likedrecipes WHERE user_id = ?`,
     [userId]
   );
   return rows.map((r) => r.recipe_id);
 }
-async function markAsLiked(userId,recipeId){
+async function markAsLiked(userId, recipeId) {
   await DButils.execQuery(
     `INSERT INTO likedrecipes (user_id, recipe_id) VALUES (?, ?)`,
     [userId, recipeId]
   );
 }
-async function isRecipeLiked(userId,recipeId){
-   const rows = await DButils.execQuery(
+async function isRecipeLiked(userId, recipeId) {
+  const rows = await DButils.execQuery(
     `SELECT 1 FROM likedrecipes WHERE user_id = ? AND recipe_id = ? LIMIT 1`,
     [userId, recipeId]
   );
@@ -345,7 +345,7 @@ async function addFamilyRecipe(
   instructions,
   image
 ) {
-  const result=await DButils.execQuery(
+  const result = await DButils.execQuery(
     `INSERT INTO familyrecipes 
        (user_id, family_member, occasion, ingredients, instructions, image)
      VALUES (?, ?, ?, ?, ?, ?)`,
@@ -366,6 +366,31 @@ async function deleteFamilyRecipe(userId, familyRecipeId) {
     `DELETE FROM familyrecipes WHERE user_id = ? AND familyrecipe_id = ?`,
     [userId, familyRecipeId]
   );
+}
+
+//
+// ——— Recipes Status ———
+//
+
+async function getRecipesStatus(user_id, recipeIds = []) {
+  if (recipeIds.length === 0) {
+    return { viewedSet: new Set(), favoriteSet: new Set() };
+  }
+  const placeholders = recipeIds.map(() => "?").join(",");
+  const rows = await DButils.execQuery(
+    `SELECT recipe_id, viewed, favorite 
+       FROM user_recipe_flags 
+      WHERE user_id = ? 
+        AND recipe_id IN (${placeholders})`,
+    [user_id, ...recipeIds]
+  );
+  const viewedSet = new Set();
+  const favoriteSet = new Set();
+  for (const { recipe_id, viewed, favorite } of rows) {
+    if (viewed) viewedSet.add(recipe_id);
+    if (favorite) favoriteSet.add(recipe_id);
+  }
+  return { viewedSet, favoriteSet };
 }
 
 module.exports = {
@@ -396,4 +421,5 @@ module.exports = {
   getFamilyRecipes,
   addFamilyRecipe,
   deleteFamilyRecipe,
+  getRecipesStatus,
 };

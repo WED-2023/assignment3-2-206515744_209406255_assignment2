@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node main.js",
     "dev": "nodemon main.js"
-    
   },
   "keywords": [],
   "author": "",
@@ -21,6 +20,7 @@
     "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "express-validator": "^6.4.1",
+    "lru-cache": "^11.1.0",
     "morgan": "^1.10.0",
     "mssql": "^6.2.0",
     "mysql2": "^3.3.4",
