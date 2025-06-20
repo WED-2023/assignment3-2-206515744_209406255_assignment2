@@ -912,11 +912,9 @@ paths:
               schema:
 
   /countries:
-    tags:
-      - Countries
     get:
       tags:
-        - Users
+        - Countries
       summary: Get list of all countries
       description: Returns an array of country names.
       responses:
