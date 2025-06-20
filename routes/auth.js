@@ -17,11 +17,11 @@ router.post("/Register", async (req, res, next) => {
     let users = [];
     users = await DButils.execQuery("SELECT username from users");
 
-    if (users.find((x) => x.username === user_details.username)){
+    if (users.find((x) => x.username === user_details.username)) {
       throw {
         status: 409,
         message: `Username -> ${user_details.username} is already taken!`,
-      }
+      };
     }
 
     // add the new username
@@ -44,7 +44,8 @@ router.post("/Register", async (req, res, next) => {
       ]
     );
     res.status(201).send({
-      message: `user with username -> ${user_details.username} created successfully!`, success: true
+      message: `user with username -> ${user_details.username} created successfully!`,
+      success: true,
     });
   } catch (error) {
     next(error);
@@ -54,10 +55,10 @@ router.post("/Register", async (req, res, next) => {
 router.post("/Login", async (req, res, next) => {
   try {
     if (req.session.user_id) {
-      throw{ 
+      throw {
         status: 400,
         message: "You are already logged in",
-      }
+      };
     }
     // check that username exists
     const users = await DButils.execQuery(
@@ -65,19 +66,19 @@ router.post("/Login", async (req, res, next) => {
       [req.body.username]
     );
     if (users.length === 0) {
-      throw{
+      throw {
         status: 401,
         message: "Username or Password incorrect",
-      }
+      };
     }
     // check that the password is correct
     // const user = users.find((u) => u.username === req.body.username);
     const user = users[0];
     if (!bcrypt.compareSync(req.body.password, user.password)) {
-      throw{
+      throw {
         status: 401,
         message: "Username or Password incorrect",
-      }
+      };
     }
 
     // Set cookie
@@ -85,8 +86,9 @@ router.post("/Login", async (req, res, next) => {
     console.log("session user_id login: " + req.session.user_id);
 
     // return cookie
-    res.status(202).send({ 
-      message: "login succeeded ", success: true 
+    res.status(202).send({
+      message: "login succeeded ",
+      success: true,
     });
   } catch (error) {
     next(error);
@@ -96,15 +98,50 @@ router.post("/Login", async (req, res, next) => {
 router.post("/Logout", function (req, res, next) {
   try {
     if (!req.session.user_id) {
-      throw{
+      throw {
         status: 401,
         message: "You are not logged in",
-      }
+      };
     }
     console.log("session user_id Logout: " + req.session.user_id);
     req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
-    res.status(200).send({ 
-      success: true, message: "logout succeeded" 
+    res.status(200).send({
+      success: true,
+      message: "logout succeeded",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Add user information route for logged-in users
+router.get("/user_information", async (req, res, next) => {
+  try {
+    // Ensure the user is logged in
+    if (!req.session.user_id) {
+      throw {
+        status: 401,
+        message: "You must be logged in to access user information",
+      };
+    }
+    // Retrieve user details
+    const users = await DButils.execQuery(
+      "SELECT firstname, lastname, country, email, profilePic FROM users WHERE user_id = ?",
+      [req.session.user_id]
+    );
+    if (users.length === 0) {
+      throw { status: 404, message: "User not found" };
+    }
+    const { firstname, lastname, country, email, profilePic } = users[0];
+    res.status(200).send({
+      success: true,
+      data: {
+        firstname,
+        lastname,
+        country,
+        email,
+        profilePic: profilePic || null,
+      },
     });
   } catch (error) {
     next(error);

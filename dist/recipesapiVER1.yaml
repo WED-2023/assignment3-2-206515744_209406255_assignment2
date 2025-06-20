@@ -94,6 +94,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+  /user_information:
+    get:
+      tags:
+        - Users
+      summary: Get current logged-in user information
+      description: Retrieve firstname, lastname, country, email, and profile picture of the currently logged-in user
+      responses:
+        200:
+          description: User information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      firstname:
+                        type: string
+                      lastname:
+                        type: string
+                      country:
+                        type: string
+                      email:
+                        type: string
+                      profilePic:
+                        type: string
+                        format: uri
+        401:
+          description: User is not logged in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
   /users/last-view:
     get:
       tags:
