@@ -114,18 +114,7 @@ paths:
                     type: boolean
                   data:
                     type: object
-                    properties:
-                      firstname:
-                        type: string
-                      lastname:
-                        type: string
-                      country:
-                        type: string
-                      email:
-                        type: string
-                      profilePic:
-                        type: string
-                        format: uri
+                    $ref: "#/components/schemas/UserDetails"
         401:
           description: User is not logged in.
           content:
@@ -895,21 +884,25 @@ paths:
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/SuccessMessage"
         400:
           description: Invalid input (e.g., missing recipe_id or invalid userName)
           content:
             application/json:
-              schema:
+                $ref: "#/components/schemas/ErrorMessage"
         401:
           description: User is not authorized.
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/ErrorMessage"
         404:
           description: User or recipe not found
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
 
   /countries:
     get:
@@ -923,9 +916,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                $ref: "#/components/schemas/Countries"
         500:
           description: Server error.
           content:
@@ -1181,7 +1172,12 @@ components:
                 vitamins and minerals. It is a good option if youre following
                 a gluten free and lacto ovo vegetarian diet.
               description: Brief summary of the recipe with some additional information on the recipe.
-
+    Countries:
+      type: array
+      items:
+        type: string
+        example: Norway,Egypt
+        description: List of country names.
     ErrorMessage:
       type: object
       properties:
