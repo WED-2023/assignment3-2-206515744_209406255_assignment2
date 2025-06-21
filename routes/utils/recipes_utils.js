@@ -222,24 +222,45 @@ async function getRecipePreparationDetails(recipe_id, user_id) {
         id: recipe_id,
         title,
         image,
-        numberOfPortions,
+        numberOfPortions: Number(numberOfPortions) || 1,
         preparationSteps,
       };
     }
   }
-  // Fallback: use external API data
-  const full = await getFullRecipeDetails(recipe_id);
-  const preparationSteps = full.instructions.map((inst, idx) => ({
-    stepNumber: idx + 1,
-    instruction: inst,
-    equipment: full.equipment,
-    ingredients: full.ingredients,
-  }));
+  // Fallback: use single API call and attach only relevant equipment & ingredients per step
+  const data = await getRecipeInformation(recipe_id);
+  const preparationSteps = [];
+  // Loop through all instruction groups & steps
+  for (const group of data.analyzedInstructions || []) {
+    for (const stepObj of group.steps || []) {
+      // collect equipment names for this step
+      const equipment = (stepObj.equipment || []).map((e) => e.name);
+      // collect only ingredients used in this step, matching full details
+      const ingredients = (stepObj.ingredients || []).map((ing) => {
+        const fullIng =
+          (data.extendedIngredients || []).find((x) => x.id === ing.id) || {};
+        return {
+          name: fullIng.name || ing.name || "Unknown",
+          amount: typeof fullIng.amount === "number" ? fullIng.amount : null,
+          unit: fullIng.unit || "",
+          description: fullIng.original || "",
+        };
+      });
+      preparationSteps.push({
+        stepNumber: stepObj.number,
+        instruction: stepObj.step,
+        equipment,
+        ingredients,
+      });
+    }
+  }
+  // ensure sorted by step number
+  preparationSteps.sort((a, b) => a.stepNumber - b.stepNumber);
   return {
-    id: full.id,
-    title: full.title,
-    image: full.image,
-    numberOfPortions: full.numberOfPortions,
+    id: data.id,
+    title: data.title,
+    image: data.image,
+    numberOfPortions: data.servings,
     preparationSteps,
   };
 }
