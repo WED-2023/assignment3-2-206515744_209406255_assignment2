@@ -38,14 +38,7 @@ CREATE TABLE familyrecipes (
   PRIMARY KEY (familyrecipe_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
-CREATE TABLE mealplan (
-  user_id INT NOT NULL,
-  recipe_id INT NOT NULL,
-  position INT NOT NULL,
-  PRIMARY KEY (user_id, recipe_id),
-  FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (recipe_id) REFERENCES myrecipes(recipe_id)
-);
+
 CREATE TABLE favoriterecipes(
   user_id INT NOT NULL,
   recipe_id INT NOT NULL,

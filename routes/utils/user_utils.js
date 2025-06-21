@@ -268,53 +268,7 @@ async function deleteUserRecipe(userId, recipeId) {
   );
 }
 
-//
-// ——— Meal Plan ———
-//
 
-async function getMealPlan(userId) {
-  const rows = await DButils.execQuery(
-    `SELECT recipe_id, position 
-       FROM mealplan 
-      WHERE user_id = ? 
-   ORDER BY position`,
-    [userId]
-  );
-  return rows.map((r) => ({
-    user_id: userId,
-    recipe_id: r.recipe_id,
-    position: r.position,
-  }));
-}
-
-async function addMealPlan(userId, recipeId) {
-  const [{ nextPos }] = await DButils.execQuery(
-    `SELECT COALESCE(MAX(position),0)+1 AS nextPos 
-       FROM mealplan 
-      WHERE user_id = ?`,
-    [userId]
-  );
-  await DButils.execQuery(
-    `INSERT INTO mealplan (user_id, recipe_id, position) VALUES (?, ?, ?)`,
-    [userId, recipeId, nextPos]
-  );
-}
-
-async function deleteMealPlan(userId, recipeId) {
-  await DButils.execQuery(
-    `DELETE FROM mealplan WHERE user_id = ? AND recipe_id = ?`,
-    [userId, recipeId]
-  );
-  // re-order
-  await DButils.execQuery(
-    `SET @pos := 0;
-     UPDATE mealplan 
-        SET position = (@pos := @pos + 1)
-      WHERE user_id = ?
-      ORDER BY position`,
-    [userId]
-  );
-}
 
 //
 // ——— Family Recipes ———
@@ -390,9 +344,6 @@ module.exports = {
   getUserSpecificRecipe,
   getUserRecipeDetails,
   deleteUserRecipe,
-  getMealPlan,
-  addMealPlan,
-  deleteMealPlan,
   getFamilyRecipes,
   addFamilyRecipe,
   deleteFamilyRecipe,

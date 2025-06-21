@@ -832,111 +832,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
-  /users/meal-plan:
-    get:
-      tags:
-        - Users
-      summary: Get the user meal plan.
-      description: Return the meal plan of the specified user name.
-      responses:
-        200:
-          description: Successfully return user meal plan.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/MealPlan"
-        401:
-          description: User is not logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-    post:
-      tags:
-        - Users
-      summary: Add a recipe to the user's meal plan
-      description: Add a recipe to the user's meal plan, creating the list if it doesn't exist.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - user_id
-                - recipe_id
-              properties:
-                user_id:
-                  type: integer
-                  description: The unique ID of the user
-                recipe_id:
-                  type: integer
-                  description: The unique ID of the recipe
-      responses:
-        200:
-          description: Recipe successfully added to the user's meal plan
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-    delete:
-      tags:
-        - Users
-      summary: Delete a recipe from the user's meal plan
-      description: Delete a recipe from the user's meal plan. Must specify the user id and the recipe id.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-
-      responses:
-        200:
-          description: Recipe successfully deleted from the user's meal plan
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-
+  
   /countries:
     get:
       tags:
@@ -958,21 +854,6 @@ paths:
                 $ref: "#/components/schemas/ErrorMessage"
 components:
   schemas:
-    MealPlan:
-      description: meal plan
-      type: object
-      required:
-        - recipe_id
-        - position
-      properties:
-        recipe_id:
-          type: integer
-          description: id of the recipe
-          example: 779
-        position:
-          type: integer
-          description: position of the recipe in the meal plan
-          example: 1
     FamilyRecipe:
       description: family recipe
       type: object

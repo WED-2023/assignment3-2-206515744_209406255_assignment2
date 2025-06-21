@@ -318,53 +318,6 @@ router.delete("/my-recipes", async (req, res, next) => {
   }
 });
 
-// GET /users/meal-plan
-router.get("/meal-plan", async (req, res, next) => {
-  try {
-    const plan = await user_utils.getMealPlan(req.user_id);
-    res.status(200).send(plan);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// POST /users/meal-plan
-router.post("/meal-plan", async (req, res, next) => {
-  try {
-    const recipe_id  = req.body.recipe_id;
-    if (recipe_id === undefined || recipe_id === null) {
-      throw {
-        status: 400,
-        message: "Missing recipe_id",
-      };
-    }
-    await user_utils.addMealPlan(req.user_id, recipe_id);
-    res
-      .status(200)
-      .send({ message: `Recipe ${recipe_id} added to meal plan`, success: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// DELETE /users/meal-plan
-router.delete("/meal-plan", async (req, res, next) => {
-  try {
-    const  recipe_id  = req.body.recipe_id;
-    if (recipe_id === undefined || recipe_id === null) {
-      throw {
-        status: 400,
-        message: "Missing recipe_id",
-      };
-    }
-    await user_utils.deleteMealPlan(req.user_id, recipe_id);
-    res
-      .status(200)
-      .send({ message: `Recipe ${recipe_id} removed from meal plan`, success: true });
-  } catch (err) {
-    next(err);
-  }
-});
 
 // GET /users/family-recipes
 router.get("/family-recipes", async (req, res, next) => {
