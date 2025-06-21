@@ -119,7 +119,6 @@ async function getRandomRecipeDetails(number = 3) {
 }
 
 async function getSearchRecipeDetails(params = {}, numberOfResults = 5) {
-  console.log("params", params);
   const { data } = await axios.get(`${api_domain}/complexSearch`, {
     params: {
       ...params,
@@ -128,10 +127,8 @@ async function getSearchRecipeDetails(params = {}, numberOfResults = 5) {
       fillIngredients: true, // This adds ingredient info if needed
     },
   });
-  console.log("data", data);
   const results = data.results || [];
   const limit = Math.min(results.length, numberOfResults);
-  console.log("limit", limit);
 
   // No need for the loop with individual API calls anymore
   return results.slice(0, limit).map((recipe) => ({
