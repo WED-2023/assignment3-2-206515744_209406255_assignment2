@@ -88,4 +88,18 @@ router.get("/:recipe_id", async (req, res, next) => {
   }
 });
 
+router.get("/:recipe_id/preparation", async (req, res, next) => {
+  try {
+    const { recipe_id } = req.params;
+    const user_id = req.session.user_id;
+    const prep = await recipes_utils.getRecipePreparationDetails(
+      recipe_id,
+      user_id
+    );
+    res.status(200).send(prep);
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

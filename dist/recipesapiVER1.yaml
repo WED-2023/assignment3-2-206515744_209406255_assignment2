@@ -640,6 +640,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
+  /recipes/{recipe_id}/preparation:
+    get:
+      tags:
+        - Recipes
+      summary: Get detailed preparation steps for a recipe
+      description: Returns instructions, equipment, and ingredients grouped by step
+      parameters:
+        - name: recipe_id
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Preparation details returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipePreparation'
+        '401':
+          description: User is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
   /recipes/search:
     get:
       tags:
@@ -1197,3 +1230,54 @@ components:
         success:
           type: boolean
           example: true
+    RecipePreparation:
+      type: object
+      required:
+        - id
+        - title
+        - preparationSteps
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        image:
+          type: string
+          format: uri
+        numberOfPortions:
+          type: integer
+        preparationSteps:
+          type: array
+          items:
+            type: object
+            required:
+              - stepNumber
+              - instruction
+              - equipment
+              - ingredients
+            properties:
+              stepNumber:
+                type: integer
+              instruction:
+                type: string
+              equipment:
+                type: array
+                items:
+                  type: string
+              ingredients:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - name
+                    - amount
+                    - unit
+                  properties:
+                    name:
+                      type: string
+                    amount:
+                      type: number
+                    unit:
+                      type: string
+                    description:
+                      type: string
