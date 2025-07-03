@@ -182,52 +182,8 @@ async function enrichRecipesWithUserInfo(user_id, recipes = []) {
   return recipes;
 }
 
-async function getRecipePreparationDetails(recipe_id, user_id) {
-  // If this is a user-owned recipe, load from database tables
-  if (user_id) {
-    const myRecipes = await DButils.execQuery(
-      "SELECT title, image, numberOfPortions FROM myrecipes WHERE recipe_id = ? AND user_id = ?",
-      [recipe_id, user_id]
-    );
-    if (myRecipes.length) {
-      const { title, image, numberOfPortions } = myRecipes[0];
-      const instructions = await DButils.execQuery(
-        "SELECT instruction_number, instruction FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? ORDER BY instruction_number",
-        [user_id, recipe_id]
-      );
-      const equipmentRows = await DButils.execQuery(
-        "SELECT equipment_number, equipment FROM recipeequipments WHERE user_id = ? AND recipe_id = ? ORDER BY equipment_number",
-        [user_id, recipe_id]
-      );
-      const ingredientRows = await DButils.execQuery(
-        "SELECT ingredient_number, name, amount, unit, description FROM recipeingredients WHERE user_id = ? AND recipe_id = ? ORDER BY ingredient_number",
-        [user_id, recipe_id]
-      );
-      const preparationSteps = instructions.map((ins) => ({
-        stepNumber: ins.instruction_number,
-        instruction: ins.instruction,
-        equipment: equipmentRows
-          .filter((e) => e.equipment_number === ins.instruction_number)
-          .map((e) => e.equipment),
-        ingredients: ingredientRows
-          .filter((i) => i.ingredient_number === ins.instruction_number)
-          .map((i) => ({
-            name: i.name,
-            amount: i.amount,
-            unit: i.unit,
-            description: i.description,
-          })),
-      }));
-      return {
-        id: recipe_id,
-        title,
-        image,
-        numberOfPortions: Number(numberOfPortions) || 1,
-        preparationSteps,
-      };
-    }
-  }
-  // Fallback: use single API call and attach only relevant equipment & ingredients per step
+async function getRecipePreparationDetails(recipe_id) {
+  // Use Spoonacular API for external recipes
   const data = await getRecipeInformation(recipe_id);
   const preparationSteps = [];
   // Loop through all instruction groups & steps

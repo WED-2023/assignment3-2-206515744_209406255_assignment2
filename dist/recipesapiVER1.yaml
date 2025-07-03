@@ -600,6 +600,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
 
+  /users/my-recipes/{recipe_id}/preparation:
+    get:
+      tags:
+        - Users
+      summary: Get detailed preparation steps for a user-created recipe
+      description: Returns instructions, equipment, and ingredients grouped by step for recipes created by the authenticated user
+      parameters:
+        - name: recipe_id
+          in: path
+          required: true
+          description: ID of the user's recipe
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: User recipe preparation details returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipePreparation"
+        '401':
+          description: User is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        '404':
+          description: Recipe not found or doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
   /recipes/{recipe_id}:
     get:
       tags:

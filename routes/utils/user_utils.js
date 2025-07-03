@@ -22,21 +22,21 @@ async function deleteUserLiked(userId, recipeId) {
     [userId, recipeId]
   );
 }
-async function getLikedRecipes(userId,recipeId){
+async function getLikedRecipes(userId, recipeId) {
   const rows = await DButils.execQuery(
     `SELECT recipe_id FROM likedrecipes WHERE user_id = ?`,
     [userId]
   );
   return rows.map((r) => r.recipe_id);
 }
-async function markAsLiked(userId,recipeId){
+async function markAsLiked(userId, recipeId) {
   await DButils.execQuery(
     `INSERT INTO likedrecipes (user_id, recipe_id) VALUES (?, ?)`,
     [userId, recipeId]
   );
 }
-async function isRecipeLiked(userId,recipeId){
-   const rows = await DButils.execQuery(
+async function isRecipeLiked(userId, recipeId) {
+  const rows = await DButils.execQuery(
     `SELECT 1 FROM likedrecipes WHERE user_id = ? AND recipe_id = ? LIMIT 1`,
     [userId, recipeId]
   );
@@ -232,7 +232,7 @@ async function getUserRecipeDetails(userId, recipeId, recipe) {
   ]);
 
   return {
-    recipe_id: recipeId,
+    id: recipeId,
     title: recipe.title,
     image: recipe.image,
     readyInMinutes: recipe.readyInMinutes,
@@ -268,8 +268,6 @@ async function deleteUserRecipe(userId, recipeId) {
   );
 }
 
-
-
 //
 // ——— Family Recipes ———
 //
@@ -299,7 +297,7 @@ async function addFamilyRecipe(
   instructions,
   image
 ) {
-  const result=await DButils.execQuery(
+  const result = await DButils.execQuery(
     `INSERT INTO familyrecipes 
        (user_id, family_member, occasion, ingredients, instructions, image)
      VALUES (?, ?, ?, ?, ?, ?)`,
@@ -320,6 +318,66 @@ async function deleteFamilyRecipe(userId, familyRecipeId) {
     `DELETE FROM familyrecipes WHERE user_id = ? AND familyrecipe_id = ?`,
     [userId, familyRecipeId]
   );
+}
+
+async function getUserRecipePreparationDetails(user_id, recipe_id) {
+  // Get basic recipe info
+  const myRecipes = await DButils.execQuery(
+    "SELECT title, image, numberOfPortions FROM myrecipes WHERE recipe_id = ? AND user_id = ?",
+    [recipe_id, user_id]
+  );
+
+  if (myRecipes.length === 0) {
+    throw {
+      status: 404,
+      message: "Recipe not found or doesn't belong to user",
+    };
+  }
+
+  const { title, image, numberOfPortions } = myRecipes[0];
+
+  // Get instructions
+  const instructions = await DButils.execQuery(
+    "SELECT instruction_number, instruction FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? ORDER BY instruction_number",
+    [user_id, recipe_id]
+  );
+
+  // Get equipment
+  const equipmentRows = await DButils.execQuery(
+    "SELECT equipment_number, equipment FROM recipeequipments WHERE user_id = ? AND recipe_id = ? ORDER BY equipment_number",
+    [user_id, recipe_id]
+  );
+
+  // Get ingredients
+  const ingredientRows = await DButils.execQuery(
+    "SELECT ingredient_number, name, amount, unit, description FROM recipeingredients WHERE user_id = ? AND recipe_id = ? ORDER BY ingredient_number",
+    [user_id, recipe_id]
+  );
+
+  // Combine into preparation steps
+  const preparationSteps = instructions.map((ins) => ({
+    stepNumber: ins.instruction_number,
+    instruction: ins.instruction,
+    equipment: equipmentRows
+      .filter((e) => e.equipment_number === ins.instruction_number)
+      .map((e) => e.equipment),
+    ingredients: ingredientRows
+      .filter((i) => i.ingredient_number === ins.instruction_number)
+      .map((i) => ({
+        name: i.name,
+        amount: i.amount,
+        unit: i.unit,
+        description: i.description,
+      })),
+  }));
+
+  return {
+    id: recipe_id,
+    title,
+    image,
+    numberOfPortions: Number(numberOfPortions) || 1,
+    preparationSteps,
+  };
 }
 
 module.exports = {
@@ -347,4 +405,5 @@ module.exports = {
   getFamilyRecipes,
   addFamilyRecipe,
   deleteFamilyRecipe,
+  getUserRecipePreparationDetails,
 };
