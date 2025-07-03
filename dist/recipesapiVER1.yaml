@@ -797,7 +797,7 @@ paths:
       tags:
         - Users
       summary: Add a family recipe
-      description: Add a family recipe to the system.
+      description: Add a family recipe to the system. Now requires detailed ingredients (with amounts and units), step-by-step instructions, and equipment list for preparation functionality.
       requestBody:
         required: true
         content:
@@ -812,7 +812,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
         400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          description: Invalid input (e.g., missing required fields like family_member, occasion, ingredients, instructions, equipment)
           content:
             application/json:
               schema:
@@ -824,7 +824,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
         404:
-          description: User or recipe not found
+          description: User not found
           content:
             application/json:
               schema:
@@ -841,13 +841,13 @@ paths:
             schema:
               type: object
               required:
-                - familyrecipe_id
+                - recipe_id
               properties:
-                familyrecipe_id:
+                recipe_id:
                   type: integer
                   description: The unique ID of the family recipe
               example:
-                familyrecipe_id: 123
+                recipe_id: 123
 
       responses:
         200:
@@ -857,7 +857,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessMessage"
         400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
+          description: Invalid input (e.g., missing recipe_id)
           content:
             application/json:
               schema:
@@ -869,6 +869,74 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
   
+  /users/family-recipes/{recipe_id}:
+    get:
+      tags:
+        - Users
+      summary: Get specific family recipe details
+      description: Return details of a specific family recipe created by the user
+      parameters:
+        - name: recipe_id
+          in: path
+          required: true
+          description: ID of the family recipe
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Successfully return family recipe details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyRecipe"
+        401:
+          description: User is not logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        404:
+          description: Family recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /users/family-recipes/{recipe_id}/preparation:
+    get:
+      tags:
+        - Users
+      summary: Get detailed preparation steps for a family recipe
+      description: Returns instructions, equipment, and ingredients grouped by step for family recipes created by the authenticated user
+      parameters:
+        - name: recipe_id
+          in: path
+          required: true
+          description: ID of the family recipe
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Family recipe preparation details returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipePreparation"
+        '401':
+          description: User is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        '404':
+          description: Family recipe not found or doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
   /countries:
     get:
       tags:
@@ -894,21 +962,20 @@ components:
       description: family recipe
       type: object
       required:
-        - familyrecipe_id
         - family_member
         - occasion
         - ingredients
         - instructions
-        - image
+        - equipment
       properties:
-        familyrecipe_id:
+        id:
           type: integer
           description: family recipe id of the recipe
-          exampe: 779
-        family_member:
+          example: 779
+        familyMember:
           type: string
           description: family member who created the recipe
-          example: Ilay Gavrilenko
+          example: Grandma Sarah
         occasion:
           type: string
           description: occasion for which the recipe is suitable
@@ -916,13 +983,39 @@ components:
         ingredients:
           type: array
           items:
-            type: string
-            example: carrot, tomato, onion, etc.
+            type: object
+            required:
+              - name
+              - amount
+              - unit
+            properties:
+              name:
+                type: string
+                example: carrot
+                description: Name of the ingredient
+              amount:
+                type: number
+                example: 3
+                description: The quantity of the ingredient
+              unit:
+                type: string
+                example: large
+                description: The unit of the quantity for the ingredient
+              description:
+                type: string
+                example: washed and chopped
+                description: Additional description of the ingredient
         instructions:
           type: array
           items:
             type: string
             example: Drain the eggs, return them to the pan and shake the pan to crack the shells all over.
+        equipment:
+          type: array
+          items:
+            type: string
+            example: sauce pan
+            description: Required equipment for the recipe
         image:
           type: string
           description: recipe image
@@ -1252,3 +1345,9 @@ components:
                 amount: 500
                 unit: "ml"
                 description: "warm"
+        # Example for a family recipe preparation:
+        # id: 201  
+        # title: "Grandma Sarah's Birthday Cake"
+        # image: "https://example.com/images/birthday-cake.jpg"
+        # numberOfPortions: 1
+        # preparationSteps: [...]

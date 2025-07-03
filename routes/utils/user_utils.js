@@ -141,38 +141,53 @@ async function addUserRecipe(userId, details) {
   return result.insertId;
 }
 
-async function addIngredients(userId, recipeId, ingredients) {
+async function addIngredients(
+  userId,
+  recipeId,
+  ingredients,
+  recipeType = "user"
+) {
   for (const [
     idx,
     { name, amount, unit, description },
   ] of ingredients.entries()) {
     await DButils.execQuery(
       `INSERT INTO recipeingredients 
-         (user_id, recipe_id, ingredient_number, name, amount, unit, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userId, recipeId, idx + 1, name, amount, unit, description]
+         (user_id, recipe_id, ingredient_number, name, amount, unit, description, recipe_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, recipeId, idx + 1, name, amount, unit, description, recipeType]
     );
   }
 }
 
-async function addInstructions(userId, recipeId, instructions) {
+async function addInstructions(
+  userId,
+  recipeId,
+  instructions,
+  recipeType = "user"
+) {
   for (const [idx, instruction] of instructions.entries()) {
     await DButils.execQuery(
       `INSERT INTO recipeinstructions 
-         (user_id, recipe_id, instruction_number, instruction)
-       VALUES (?, ?, ?, ?)`,
-      [userId, recipeId, idx + 1, instruction]
+         (user_id, recipe_id, instruction_number, instruction, recipe_type)
+       VALUES (?, ?, ?, ?, ?)`,
+      [userId, recipeId, idx + 1, instruction, recipeType]
     );
   }
 }
 
-async function addEquipments(userId, recipeId, equipments) {
+async function addEquipments(
+  userId,
+  recipeId,
+  equipments,
+  recipeType = "user"
+) {
   for (const [idx, equipment] of equipments.entries()) {
     await DButils.execQuery(
       `INSERT INTO recipeequipments 
-         (user_id, recipe_id, equipment_number, equipment)
-       VALUES (?, ?, ?, ?)`,
-      [userId, recipeId, idx + 1, equipment]
+         (user_id, recipe_id, equipment_number, equipment, recipe_type)
+       VALUES (?, ?, ?, ?, ?)`,
+      [userId, recipeId, idx + 1, equipment, recipeType]
     );
   }
 }
@@ -211,21 +226,21 @@ async function getUserRecipeDetails(userId, recipeId, recipe) {
     DButils.execQuery(
       `SELECT equipment 
          FROM recipeequipments 
-        WHERE user_id = ? AND recipe_id = ? 
+        WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user'
      ORDER BY equipment_number`,
       [userId, recipeId]
     ),
     DButils.execQuery(
       `SELECT name, amount, unit, description 
          FROM recipeingredients 
-        WHERE user_id = ? AND recipe_id = ? 
+        WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user'
      ORDER BY ingredient_number`,
       [userId, recipeId]
     ),
     DButils.execQuery(
       `SELECT instruction 
          FROM recipeinstructions 
-        WHERE user_id = ? AND recipe_id = ? 
+        WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user'
      ORDER BY instruction_number`,
       [userId, recipeId]
     ),
@@ -251,15 +266,15 @@ async function getUserRecipeDetails(userId, recipeId, recipe) {
 
 async function deleteUserRecipe(userId, recipeId) {
   await DButils.execQuery(
-    `DELETE FROM recipeingredients WHERE user_id = ? AND recipe_id = ?`,
+    `DELETE FROM recipeingredients WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user'`,
     [userId, recipeId]
   );
   await DButils.execQuery(
-    `DELETE FROM recipeinstructions WHERE user_id = ? AND recipe_id = ?`,
+    `DELETE FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user'`,
     [userId, recipeId]
   );
   await DButils.execQuery(
-    `DELETE FROM recipeequipments WHERE user_id = ? AND recipe_id = ?`,
+    `DELETE FROM recipeequipments WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user'`,
     [userId, recipeId]
   );
   await DButils.execQuery(
@@ -295,6 +310,7 @@ async function addFamilyRecipe(
   occasion,
   ingredients,
   instructions,
+  equipment,
   image
 ) {
   const result = await DButils.execQuery(
@@ -310,10 +326,33 @@ async function addFamilyRecipe(
       image,
     ]
   );
-  return result.insertId;
+
+  const familyRecipeId = result.insertId;
+
+  // Add ingredients, instructions, and equipment to the shared tables
+  await addIngredients(userId, familyRecipeId, ingredients, "family");
+  await addInstructions(userId, familyRecipeId, instructions, "family");
+  await addEquipments(userId, familyRecipeId, equipment, "family");
+
+  return familyRecipeId;
 }
 
 async function deleteFamilyRecipe(userId, familyRecipeId) {
+  // Delete related ingredients, instructions, and equipment
+  await DButils.execQuery(
+    `DELETE FROM recipeingredients WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'family'`,
+    [userId, familyRecipeId]
+  );
+  await DButils.execQuery(
+    `DELETE FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'family'`,
+    [userId, familyRecipeId]
+  );
+  await DButils.execQuery(
+    `DELETE FROM recipeequipments WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'family'`,
+    [userId, familyRecipeId]
+  );
+
+  // Delete the family recipe itself
   await DButils.execQuery(
     `DELETE FROM familyrecipes WHERE user_id = ? AND familyrecipe_id = ?`,
     [userId, familyRecipeId]
@@ -338,19 +377,19 @@ async function getUserRecipePreparationDetails(user_id, recipe_id) {
 
   // Get instructions
   const instructions = await DButils.execQuery(
-    "SELECT instruction_number, instruction FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? ORDER BY instruction_number",
+    "SELECT instruction_number, instruction FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user' ORDER BY instruction_number",
     [user_id, recipe_id]
   );
 
   // Get equipment
   const equipmentRows = await DButils.execQuery(
-    "SELECT equipment_number, equipment FROM recipeequipments WHERE user_id = ? AND recipe_id = ? ORDER BY equipment_number",
+    "SELECT equipment_number, equipment FROM recipeequipments WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user' ORDER BY equipment_number",
     [user_id, recipe_id]
   );
 
   // Get ingredients
   const ingredientRows = await DButils.execQuery(
-    "SELECT ingredient_number, name, amount, unit, description FROM recipeingredients WHERE user_id = ? AND recipe_id = ? ORDER BY ingredient_number",
+    "SELECT ingredient_number, name, amount, unit, description FROM recipeingredients WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'user' ORDER BY ingredient_number",
     [user_id, recipe_id]
   );
 
@@ -376,6 +415,66 @@ async function getUserRecipePreparationDetails(user_id, recipe_id) {
     title,
     image,
     numberOfPortions: Number(numberOfPortions) || 1,
+    preparationSteps,
+  };
+}
+
+async function getFamilyRecipePreparationDetails(user_id, familyRecipe_id) {
+  // Get basic family recipe info
+  const familyRecipes = await DButils.execQuery(
+    "SELECT family_member, occasion, image FROM familyrecipes WHERE familyrecipe_id = ? AND user_id = ?",
+    [familyRecipe_id, user_id]
+  );
+
+  if (familyRecipes.length === 0) {
+    throw {
+      status: 404,
+      message: "Family recipe not found or doesn't belong to user",
+    };
+  }
+
+  const { family_member, occasion, image } = familyRecipes[0];
+
+  // Get instructions
+  const instructions = await DButils.execQuery(
+    "SELECT instruction_number, instruction FROM recipeinstructions WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'family' ORDER BY instruction_number",
+    [user_id, familyRecipe_id]
+  );
+
+  // Get equipment
+  const equipmentRows = await DButils.execQuery(
+    "SELECT equipment_number, equipment FROM recipeequipments WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'family' ORDER BY equipment_number",
+    [user_id, familyRecipe_id]
+  );
+
+  // Get ingredients
+  const ingredientRows = await DButils.execQuery(
+    "SELECT ingredient_number, name, amount, unit, description FROM recipeingredients WHERE user_id = ? AND recipe_id = ? AND recipe_type = 'family' ORDER BY ingredient_number",
+    [user_id, familyRecipe_id]
+  );
+
+  // Combine into preparation steps
+  const preparationSteps = instructions.map((ins) => ({
+    stepNumber: ins.instruction_number,
+    instruction: ins.instruction,
+    equipment: equipmentRows
+      .filter((e) => e.equipment_number === ins.instruction_number)
+      .map((e) => e.equipment),
+    ingredients: ingredientRows
+      .filter((i) => i.ingredient_number === ins.instruction_number)
+      .map((i) => ({
+        name: i.name,
+        amount: i.amount,
+        unit: i.unit,
+        description: i.description,
+      })),
+  }));
+
+  return {
+    id: familyRecipe_id,
+    title: `${family_member}'s ${occasion} Recipe`,
+    image,
+    numberOfPortions: 1, // Default for family recipes
     preparationSteps,
   };
 }
@@ -406,4 +505,5 @@ module.exports = {
   addFamilyRecipe,
   deleteFamilyRecipe,
   getUserRecipePreparationDetails,
+  getFamilyRecipePreparationDetails,
 };

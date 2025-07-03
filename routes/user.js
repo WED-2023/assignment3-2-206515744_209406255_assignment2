@@ -93,12 +93,10 @@ router.delete("/liked", async (req, res, next) => {
       };
     }
     await user_utils.deleteUserLiked(user_id, recipe_id);
-    res
-      .status(200)
-      .send({
-        message: `Recipe ${recipe_id} removed from Liked`,
-        success: true,
-      });
+    res.status(200).send({
+      message: `Recipe ${recipe_id} removed from Liked`,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -130,12 +128,10 @@ router.post("/favorites", async (req, res, next) => {
       };
     }
     await user_utils.markAsFavorite(user_id, recipe_id);
-    res
-      .status(201)
-      .send({
-        message: `Recipe ${recipe_id} added to favorites`,
-        success: true,
-      });
+    res.status(201).send({
+      message: `Recipe ${recipe_id} added to favorites`,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -177,12 +173,10 @@ router.delete("/favorites", async (req, res, next) => {
       };
     }
     await user_utils.deleteUserFavorite(user_id, recipe_id);
-    res
-      .status(200)
-      .send({
-        message: `Recipe ${recipe_id} removed from favorites`,
-        success: true,
-      });
+    res.status(200).send({
+      message: `Recipe ${recipe_id} removed from favorites`,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -272,12 +266,10 @@ router.post("/my-recipes", async (req, res, next) => {
     await user_utils.addInstructions(user_id, recipe_id, recipe.instructions);
     await user_utils.addEquipments(user_id, recipe_id, recipe.equipment);
 
-    res
-      .status(201)
-      .send({
-        message: `Recipe ${recipe_id} added to user recipes`,
-        success: true,
-      });
+    res.status(201).send({
+      message: `Recipe ${recipe_id} added to user recipes`,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -333,12 +325,10 @@ router.delete("/my-recipes", async (req, res, next) => {
       };
     }
     await user_utils.deleteUserRecipe(req.user_id, recipe_id);
-    return res
-      .status(200)
-      .send({
-        message: `Recipe ${recipe_id} removed from user recipes`,
-        success: true,
-      });
+    return res.status(200).send({
+      message: `Recipe ${recipe_id} removed from user recipes`,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -357,12 +347,25 @@ router.get("/family-recipes", async (req, res, next) => {
 // POST /users/family-recipes
 router.post("/family-recipes", async (req, res, next) => {
   try {
-    const { family_member, occasion, ingredients, instructions, image } =
-      req.body;
-    if (!family_member || !occasion || !ingredients || !instructions) {
+    const {
+      family_member,
+      occasion,
+      ingredients,
+      instructions,
+      equipment,
+      image,
+    } = req.body;
+    if (
+      !family_member ||
+      !occasion ||
+      !ingredients ||
+      !instructions ||
+      !equipment
+    ) {
       throw {
         status: 400,
-        message: "Missing required fields",
+        message:
+          "Missing required fields: family_member, occasion, ingredients, instructions, equipment",
       };
     }
     const familyrecipe_id = await user_utils.addFamilyRecipe(
@@ -371,14 +374,13 @@ router.post("/family-recipes", async (req, res, next) => {
       occasion,
       ingredients,
       instructions,
+      equipment,
       image
     );
-    res
-      .status(201)
-      .send({
-        message: `Family recipe ${familyrecipe_id}  added`,
-        success: true,
-      });
+    res.status(201).send({
+      message: `Family recipe ${familyrecipe_id}  added`,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }
@@ -395,12 +397,45 @@ router.delete("/family-recipes", async (req, res, next) => {
       };
     }
     await user_utils.deleteFamilyRecipe(req.user_id, familyrecipe_id);
-    res
-      .status(200)
-      .send({
-        message: `Family recipe ${familyrecipe_id} removed`,
-        success: true,
-      });
+    res.status(200).send({
+      message: `Family recipe ${familyrecipe_id} removed`,
+      success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /users/family-recipes/:recipe_id/preparation
+router.get("/family-recipes/:recipe_id/preparation", async (req, res, next) => {
+  try {
+    const recipe_id = req.params.recipe_id;
+    const user_id = req.user_id;
+    const prep = await user_utils.getFamilyRecipePreparationDetails(
+      user_id,
+      recipe_id
+    );
+    res.status(200).send(prep);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /users/family-recipes/:recipe_id
+router.get("/family-recipes/:recipe_id", async (req, res, next) => {
+  try {
+    const recipe_id = req.params.recipe_id;
+    const familyRecipes = await user_utils.getFamilyRecipes(req.user_id);
+    const recipe = familyRecipes.find((r) => r.id == recipe_id);
+
+    if (!recipe) {
+      throw {
+        status: 404,
+        message: "Family recipe not found",
+      };
+    }
+
+    res.status(200).send(recipe);
   } catch (err) {
     next(err);
   }
