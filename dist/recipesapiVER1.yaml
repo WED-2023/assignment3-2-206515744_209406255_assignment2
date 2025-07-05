@@ -6,9 +6,6 @@ info:
   contact:
     name: Ilay Cohen and Victor Gavrilenko
     email: support@grandmarecipes.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
 servers:
   - url: "/"
     description: Local development server
