@@ -4,7 +4,7 @@ const MySql = require("../routes/utils/MySql");
 const DButils = require("../routes/utils/DButils");
 const bcrypt = require("bcrypt");
 
-router.post("/Register", async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
     // collect user details, including optional profilePic
     let user_details = {
@@ -13,9 +13,16 @@ router.post("/Register", async (req, res, next) => {
       lastname: req.body.lastname,
       country: req.body.country,
       password: req.body.password,
+      confirmedPassword: req.body.confirmedPassword,
       email: req.body.email,
       profilePic: req.body.profilePic, // optional URL
     };
+
+    // Validate that passwords match
+    if (user_details.password !== user_details.confirmedPassword) {
+      throw { status: 400, message: "Passwords do not match" };
+    }
+
     // Validate profilePic if provided
     if (user_details.profilePic) {
       try {
@@ -35,7 +42,7 @@ router.post("/Register", async (req, res, next) => {
     if (users.find((x) => x.username === user_details.username)) {
       throw {
         status: 409,
-        message: `Username -> ${user_details.username} is already taken!`,
+        message: "Username taken",
       };
     }
 
@@ -59,7 +66,7 @@ router.post("/Register", async (req, res, next) => {
       ]
     );
     res.status(201).send({
-      message: `user with username -> ${user_details.username} created successfully!`,
+      message: "User created",
       success: true,
     });
   } catch (error) {
@@ -67,7 +74,7 @@ router.post("/Register", async (req, res, next) => {
   }
 });
 
-router.post("/Login", async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   try {
     if (req.session.user_id) {
       throw {
@@ -102,7 +109,7 @@ router.post("/Login", async (req, res, next) => {
 
     // return cookie
     res.status(200).send({
-      message: "login succeeded ",
+      message: "Login succeeded",
       success: true,
     });
   } catch (error) {
@@ -110,7 +117,7 @@ router.post("/Login", async (req, res, next) => {
   }
 });
 
-router.post("/Logout", function (req, res, next) {
+router.post("/logout", function (req, res, next) {
   try {
     if (!req.session.user_id) {
       throw {
@@ -122,7 +129,7 @@ router.post("/Logout", function (req, res, next) {
     req.session.reset(); // reset the session info --> send cookie when  req.session == undefined!!
     res.status(200).send({
       success: true,
-      message: "logout succeeded",
+      message: "Logout succeeded",
     });
   } catch (error) {
     next(error);
@@ -141,16 +148,19 @@ router.get("/user_information", async (req, res, next) => {
     }
     // Retrieve user details
     const users = await DButils.execQuery(
-      "SELECT firstname, lastname, country, email, profilePic FROM users WHERE user_id = ?",
+      "SELECT username, firstname, lastname, country, email, profilePic FROM users WHERE user_id = ?",
       [req.session.user_id]
     );
     if (users.length === 0) {
       throw { status: 404, message: "User not found" };
     }
-    const { firstname, lastname, country, email, profilePic } = users[0];
+    const { username, firstname, lastname, country, email, profilePic } =
+      users[0];
     res.status(200).send({
       success: true,
+      message: "User information retrieved successfully",
       data: {
+        username,
         firstname,
         lastname,
         country,

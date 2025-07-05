@@ -52,7 +52,7 @@ router.post("/liked", async (req, res, next) => {
     await user_utils.markAsLiked(user_id, recipe_id);
     res
       .status(201)
-      .send({ message: `Recipe ${recipe_id} liked`, success: true });
+      .send({ message: "Recipe liked successfully", success: true });
   } catch (err) {
     next(err);
   }
@@ -94,7 +94,7 @@ router.delete("/liked", async (req, res, next) => {
     }
     await user_utils.deleteUserLiked(user_id, recipe_id);
     res.status(200).send({
-      message: `Recipe ${recipe_id} removed from Liked`,
+      message: "Recipe unliked successfully",
       success: true,
     });
   } catch (err) {
@@ -129,7 +129,7 @@ router.post("/favorites", async (req, res, next) => {
     }
     await user_utils.markAsFavorite(user_id, recipe_id);
     res.status(201).send({
-      message: `Recipe ${recipe_id} added to favorites`,
+      message: "Recipe added to favorites successfully",
       success: true,
     });
   } catch (err) {
@@ -174,7 +174,7 @@ router.delete("/favorites", async (req, res, next) => {
     }
     await user_utils.deleteUserFavorite(user_id, recipe_id);
     res.status(200).send({
-      message: `Recipe ${recipe_id} removed from favorites`,
+      message: "Recipe removed from favorites successfully",
       success: true,
     });
   } catch (err) {
@@ -267,8 +267,9 @@ router.post("/my-recipes", async (req, res, next) => {
     await user_utils.addEquipments(user_id, recipe_id, recipe.equipment);
 
     res.status(201).send({
-      message: `Recipe ${recipe_id} added to user recipes`,
+      message: "Recipe created successfully",
       success: true,
+      recipe_id: recipe_id,
     });
   } catch (err) {
     next(err);
@@ -326,7 +327,7 @@ router.delete("/my-recipes", async (req, res, next) => {
     }
     await user_utils.deleteUserRecipe(req.user_id, recipe_id);
     return res.status(200).send({
-      message: `Recipe ${recipe_id} removed from user recipes`,
+      message: "Recipe deleted successfully",
       success: true,
     });
   } catch (err) {
@@ -378,8 +379,9 @@ router.post("/family-recipes", async (req, res, next) => {
       image
     );
     res.status(201).send({
-      message: `Family recipe ${familyrecipe_id}  added`,
+      message: "Family recipe created successfully",
       success: true,
+      recipe_id: familyrecipe_id,
     });
   } catch (err) {
     next(err);
@@ -398,7 +400,7 @@ router.delete("/family-recipes", async (req, res, next) => {
     }
     await user_utils.deleteFamilyRecipe(req.user_id, familyrecipe_id);
     res.status(200).send({
-      message: `Family recipe ${familyrecipe_id} removed`,
+      message: "Family recipe deleted successfully",
       success: true,
     });
   } catch (err) {
