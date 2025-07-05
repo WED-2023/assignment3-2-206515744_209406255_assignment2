@@ -2,109 +2,202 @@ openapi: 3.0.3
 info:
   version: 1.0.1
   title: Grandma Recipe API
-  description: An API that allows users to register to the recpies website, get exisiting recpies information, add their own recipes and get users data.
+  description: "A comprehensive API for managing family recipes, user preferences, and recipe discovery. Organize your culinary heritage with features for personal recipe collections, family recipe sharing, and public recipe exploration."
   contact:
-  name: Ilay Cohen and Victor Gavrilenko
+    name: Ilay Cohen and Victor Gavrilenko
+    email: support@grandmarecipes.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 servers:
   - url: "/"
-    description: SwaggerHub API Auto Mocking
+    description: Local development server
+
 tags:
   - name: Auth
-    description: User registration and login
-  - name: Recipes
-    description: Public and user‑generated recipes
-  - name: Users
-    description: "Personal resources (favorites, history, own recipes)"
+    description: "User authentication and session management"
+  - name: User Profile
+    description: "User account information and profile management"
+  - name: User Interactions
+    description: "User recipe interactions - viewing history and liked recipes"
+  - name: User Favorites
+    description: "User's favorite recipe management"
+  - name: User Recipes
+    description: "User's personal recipe collection management"
+  - name: Family Recipes
+    description: "Family recipe sharing and management"
+  - name: Public Recipes
+    description: "Public recipe browsing, search, and discovery"
   - name: Countries
-    description: "Countries list for user registration"
+    description: "Country data for user registration"
+
 paths:
+  # ========================================
+  # AUTHENTICATION SECTION
+  # ========================================
+  
   /login:
     post:
       tags:
         - Auth
-      summary: user try to login
-      description: check if the user authntication details are correct.
+      summary: "User Login"
+      description: "Authenticate user with username and password to create a session"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginUser"
-        description: User details to sign in
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "john_doe"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
       responses:
-        202:
-          description: users details are valid.
+        '200':
+          description: "Login successful"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: already logged in.
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login succeeded"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "Invalid credentials"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: username or password is incorrect
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Username or Password incorrect"
+                  success:
+                    type: boolean
+                    example: false
 
   /register:
     post:
       tags:
         - Auth
-      summary: user sign up
-      description: user sends all the required details to sign up for the website.
+      summary: "User Registration"
+      description: "Register a new user account"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegisterUser"
+              type: object
+              required:
+                - username
+                - firstname
+                - lastname
+                - country
+                - password
+                - confirmedPassword
+                - email
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 8
+                  pattern: '^[a-zA-Z]+$'
+                  example: "johndoe"
+                firstname:
+                  type: string
+                  example: "John"
+                lastname:
+                  type: string
+                  example: "Doe"
+                country:
+                  type: string
+                  example: "United States"
+                password:
+                  type: string
+                  minLength: 5
+                  maxLength: 10
+                  pattern: '^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$'
+                  example: "Pass123!"
+                confirmedPassword:
+                  type: string
+                  example: "Pass123!"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
       responses:
-        201:
-          description: user signed up successfully
+        '201':
+          description: "User registered successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        409:
-          description: username is taken.
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User created"
+                  success:
+                    type: boolean
+                    example: true
+        '409':
+          description: "Username already exists"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Username taken"
+                  success:
+                    type: boolean
+                    example: false
 
   /logout:
     post:
       tags:
         - Auth
-      summary: logout user from the system.
-      description: user logged out from the website and his cookie been deleted.
+      summary: "User Logout"
+      description: "Logout user and destroy session"
       responses:
-        200:
-          description: user logged out successfully
+        '200':
+          description: "Logout successful"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        401:
-          description: user wasn't logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout succeeded"
+                  success:
+                    type: boolean
+                    example: true
+
+  # ========================================
+  # USER PROFILE SECTION
+  # ========================================
+  
   /user_information:
     get:
       tags:
-        - Users
-      summary: Get current logged-in user information
-      description: Retrieve firstname, lastname, country, email, and profile picture of the currently logged-in user
+        - User Profile
+      summary: "Get User Information"
+      description: "Retrieve current user's profile information"
       responses:
-        200:
-          description: User information retrieved successfully.
+        '200':
+          description: "User information retrieved successfully"
           content:
             application/json:
               schema:
@@ -112,57 +205,73 @@ paths:
                 properties:
                   success:
                     type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User information retrieved successfully"
                   data:
                     type: object
-                    $ref: "#/components/schemas/UserDetails"
-        401:
-          description: User is not logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                    properties:
+                      username:
+                        type: string
+                        example: "john_doe"
+                      firstname:
+                        type: string
+                        example: "John"
+                      lastname:
+                        type: string
+                        example: "Doe"
+                      country:
+                        type: string
+                        example: "United States"
+                      email:
+                        type: string
+                        example: "john@example.com"
+                      profilePic:
+                        type: string
+                        nullable: true
+                        example: "https://example.com/profile.jpg"
+        '401':
+          description: "User not authenticated"
+
+  # ========================================
+  # USER INTERACTIONS SECTION
+  # ========================================
+  
   /users/last-view:
     get:
       tags:
-        - Users
-      summary: Get the user last viewed recipes.
-      description: Return the last recipe pages that the user watched. You can specify the exact number of last pages you need(default number is 3). If there are fewer pages than the number specified, then return all last viewed existing pages.
+        - User Interactions
+      summary: "Get Last Viewed Recipes"
+      description: "Retrieve user's recently viewed recipes"
       parameters:
         - name: number
           in: query
+          description: "Number of recipes to return (default: 3)"
           required: false
-          description: The required number of last viewed pages.
           schema:
             type: integer
-            example: 3
-
+            default: 3
+            minimum: 1
+            maximum: 15
+            example: 5
       responses:
-        200:
-          description: return an array of the number specified last viewed pages.
+        '200':
+          description: "Last viewed recipes retrieved successfully"
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreview"
-        401:
-          description: User is not logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                  $ref: '#/components/schemas/Recipe'
+        '401':
+          description: "User not authenticated"
 
     post:
       tags:
-        - Users
-      summary: Add a recipe to the user's last viewed list
-      description: Add a recipe to the user's last viewed list, creating the list if it doesn't exist.
+        - User Interactions
+      summary: "Mark Recipe as Viewed"
+      description: "Add a recipe to user's viewing history"
       requestBody:
         required: true
         content:
@@ -174,103 +283,47 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the recipe
+                  example: 123
       responses:
-        201:
-          description: Recipe successfully added to the user's last viewed list
+        '201':
+          description: "Recipe marked as viewed"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-  /recipes/random:
-    get:
-      tags:
-        - Recipes
-      summary: Get n numbers of random recipes.
-      description: Return n numbers of random recipes(default n=3). minimum value is 1 and maximum value is 10. Use the 'fresh' parameter to bypass caching and get truly new random recipes.
-      parameters:
-        - name: number
-          in: query
-          required: false
-          description: Number of random recipes(default=3).
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 10
-            example: 3
-        - name: fresh
-          in: query
-          required: false
-          description: Set to 'true' to bypass cache and fetch new random recipes from the API. When 'false' or omitted, may return cached results for better performance.
-          schema:
-            type: string
-            enum: ['true', 'false']
-            example: 'true'
-
-      responses:
-        200:
-          description: Returned n recipes successfully.
-            If the user is not logged in, then the recipe 'viewed','favorite' attributes will not be included.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/RecipePreview"
-        400:
-          description: n value is not valid.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe marked as viewed"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
 
   /users/liked:
     get:
       tags:
-        - Users
-      summary: Get users liked recipes
-      description: Return all the liked recipes of the specified user name.
+        - User Interactions
+      summary: "Get Liked Recipes"
+      description: "Retrieve all recipes liked by the user"
       responses:
-        200:
-          description: Return user liked recipes.
+        '200':
+          description: "Liked recipes retrieved successfully"
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreview"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                  $ref: '#/components/schemas/Recipe'
+        '401':
+          description: "User not authenticated"
 
     post:
       tags:
-        - Users
-      summary: Add a recipe to the user's liked list
-      description: Add a recipe to the user's liked list, creating the list if it doesn't exist.
+        - User Interactions
+      summary: "Like Recipe"
+      description: "Add a recipe to user's liked recipes"
       requestBody:
         required: true
         content:
@@ -282,39 +335,29 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the recipe
+                  example: 123
       responses:
-        201:
-          description: Recipe successfully added to the user's liked list
+        '201':
+          description: "Recipe liked successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: recipe id already saved as liked.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: recipe id don't exist.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe liked successfully"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
 
     delete:
       tags:
-        - Users
-      summary: Delete user recipe from the user's liked list
-      description: Delete a recipe from the user's liked list. Must specify the recipe id.
+        - User Interactions
+      summary: "Unlike Recipe"
+      description: "Remove a recipe from user's liked recipes"
       requestBody:
         required: true
         content:
@@ -326,63 +369,51 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the user recipe
-
+                  example: 123
       responses:
-        200:
-          description: Recipe successfully removed from the user's liked list
+        '200':
+          description: "Recipe unliked successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe unliked successfully"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
 
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-
+  # ========================================
+  # USER FAVORITES SECTION
+  # ========================================
+  
   /users/favorites:
     get:
       tags:
-        - Users
-      summary: Get users favorites recipes
-      description: Return all the favorite recipes of the specified user name.
+        - User Favorites
+      summary: "Get Favorite Recipes"
+      description: "Retrieve all recipes marked as favorites by the user"
       responses:
-        200:
-          description: Return user favorite recipes.
+        '200':
+          description: "Favorite recipes retrieved successfully"
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreview"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                  $ref: '#/components/schemas/Recipe'
+        '401':
+          description: "User not authenticated"
 
     post:
       tags:
-        - Users
-      summary: Add a recipe to the user's favorites list
-      description: Add a recipe to the user's favorites list, creating the list if it doesn't exist.
+        - User Favorites
+      summary: "Add Recipe to Favorites"
+      description: "Mark a recipe as favorite"
       requestBody:
         required: true
         content:
@@ -394,39 +425,29 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the recipe
+                  example: 123
       responses:
-        201:
-          description: Recipe successfully added to the user's favorites list
+        '201':
+          description: "Recipe added to favorites"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: recipe id already saved as favorite.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: recipe id don't exist.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe added to favorites successfully"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
 
     delete:
       tags:
-        - Users
-      summary: Delete user recipe from the user's favorites list
-      description: Delete a recipe from the user's favorites list. Must specify the recipe id.
+        - User Favorites
+      summary: "Remove Recipe from Favorites"
+      description: "Remove a recipe from user's favorites"
       requestBody:
         required: true
         content:
@@ -438,100 +459,82 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the user recipe
-
+                  example: 123
       responses:
-        200:
-          description: Recipe successfully removed from the user's favorites list
+        '200':
+          description: "Recipe removed from favorites"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe removed from favorites successfully"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
 
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
+  # ========================================
+  # USER RECIPES SECTION
+  # ========================================
+  
   /users/my-recipes:
     get:
       tags:
-        - Users
-      summary: Get all the recipes created by the user.
-      description: Return all the recipes created by the user for the logged in user.
+        - User Recipes
+      summary: "Get User's Personal Recipes"
+      description: "Retrieve all recipes created by the user"
       responses:
-        200:
-          description: Successfully return user recipes.
+        '200':
+          description: "User recipes retrieved successfully"
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecipePreview"
-        401:
-          description: User is not logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                  $ref: '#/components/schemas/UserRecipe'
+        '401':
+          description: "User not authenticated"
+
     post:
       tags:
-        - Users
-      summary: Add user recipe to the user's own recipes list
-      description: Add a recipe to the user's recipes list, creating the list if it doesn't exist. Must specify the same details like all the full recipes format.
+        - User Recipes
+      summary: "Create New Personal Recipe"
+      description: "Create a new recipe in user's personal collection"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FullRecipe"
-
+              $ref: '#/components/schemas/CreateRecipeRequest'
       responses:
-        201:
-          description: Recipe successfully added to the user's favorites list
+        '201':
+          description: "Recipe created successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe created successfully"
+                  success:
+                    type: boolean
+                    example: true
+                  recipe_id:
+                    type: integer
+                    example: 456
+        '401':
+          description: "User not authenticated"
 
     delete:
       tags:
-        - Users
-      summary: Delete user recipe from the user's own recipes list
-      description: Delete a recipe from the user's recipes list. Must specify the own user recipe id.
+        - User Recipes
+      summary: "Delete Personal Recipe"
+      description: "Delete a recipe from user's personal collection"
       requestBody:
         required: true
         content:
@@ -543,305 +546,152 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the user recipe
-
+                  example: 456
       responses:
-        200:
-          description: Recipe successfully added to the user's favorites list
+        '200':
+          description: "Recipe deleted successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-
-        400:
-          description: Invalid input (e.g., missing recipe_id or invalid userName)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User or recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recipe deleted successfully"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
 
   /users/my-recipes/{recipe_id}:
     get:
       tags:
-        - Users
-      summary: Get full recipe created by the user.
-      description: Return  the full recipe created by the user for the logged in user.
+        - User Recipes
+      summary: "Get Personal Recipe Details"
+      description: "Get detailed information about a specific personal recipe"
       parameters:
         - name: recipe_id
           in: path
           required: true
-          description: recipe's Id
+          description: "ID of the recipe to retrieve"
           schema:
             type: integer
-            example: 1
+            example: 456
+        - name: full
+          in: query
+          required: false
+          description: "Get full recipe details including instructions and equipment"
+          schema:
+            type: string
+            enum: ['true', 'false']
+            default: 'false'
+            example: 'true'
       responses:
-        200:
-          description: Successfully return user recipes.
+        '200':
+          description: "Recipe details retrieved successfully"
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: "#/components/schemas/FullRecipe"
-                  - $ref: "#/components/schemas/RecipePreview"
-        401:
-          description: User is not logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: Recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                $ref: '#/components/schemas/UserRecipe'
+        '401':
+          description: "User not authenticated"
+        '404':
+          description: "Recipe not found"
 
   /users/my-recipes/{recipe_id}/preparation:
     get:
       tags:
-        - Users
-      summary: Get detailed preparation steps for a user-created recipe
-      description: Returns instructions, equipment, and ingredients grouped by step for recipes created by the authenticated user
+        - User Recipes
+      summary: "Get Personal Recipe Preparation Steps"
+      description: "Navigate through recipe preparation with step-by-step instructions"
       parameters:
         - name: recipe_id
           in: path
           required: true
-          description: ID of the user's recipe
+          description: "ID of the recipe"
           schema:
             type: integer
-            example: 1
-      responses:
-        '200':
-          description: User recipe preparation details returned successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RecipePreparation"
-        '401':
-          description: User is not authorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        '404':
-          description: Recipe not found or doesn't belong to user
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-  /recipes/{recipe_id}:
-    get:
-      tags:
-        - Recipes
-      summary: Get the preview or the full recipe.
-      description: Return the full recipe of the specified recipe id if the full param is ture or else return the preview.
-      parameters:
-        - name: recipe_id
-          in: path
-          required: true
-          description: recipe's Id
-          schema:
-            type: integer
-            example: 5
-        - name: full
+            example: 456
+        - name: step
           in: query
           required: false
-          description: True if the user want to get the full recipe or else the preview one.
-          schema:
-            type: boolean
-            example: true
-      responses:
-        201:
-          description: >
-            Successfully returned recipe. If the 'full' query parameter is true, 
-            the response will match the FullRecipe schema. Otherwise, it will match 
-            the RecipePreview schema.If the user is not logged in, then the recipe 'viewed','favorite' attributes will not be included.
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/FullRecipe"
-                  - $ref: "#/components/schemas/RecipePreview"
-        401:
-          description: "There is no such user id in the system"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-
-  /recipes/{recipe_id}/preparation:
-    get:
-      tags:
-        - Recipes
-      summary: Get detailed preparation steps for a recipe
-      description: Returns instructions, equipment, and ingredients grouped by step
-      parameters:
-        - name: recipe_id
-          in: path
-          required: true
-          description: ID of the recipe
+          description: "Current step number (default: 1)"
           schema:
             type: integer
+            minimum: 1
+            default: 1
+            example: 3
       responses:
         '200':
-          description: Preparation details returned successfully
+          description: "Preparation steps retrieved successfully"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecipePreparation'
+                $ref: '#/components/schemas/PreparationSteps'
         '401':
-          description: User is not authorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
+          description: "User not authenticated"
         '404':
-          description: Recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
+          description: "Recipe not found"
 
-  /recipes/search:
-    get:
-      tags:
-        - Recipes
-      summary: search for recipes.
-      description: search for recipes by natural language search query. Returns n search where n can be 5,10 or 15(default n=5). Its possible to expand the search using parameters of Type of cuisines, Diet and intolerance for ingredient.
-      parameters:
-        - name: query
-          in: query
-          required: true
-          description: a natural language description of the desired recipe.
-          schema:
-            type: string
-            example: pasta with tuna
-
-        - name: number
-          in: query
-          description: number of search result to return. possible value number = 5,10,15.
-          schema:
-            type: integer
-            enum: [5, 10, 15]
-            example: 5
-
-        - name: cuisines
-          in: query
-          description: The cuisine(s) of the recipes. One or more, comma separated (will be interpreted as 'OR').
-          schema:
-            type: string
-            example: American
-
-        - name: diet
-          in: query
-          description: The diet(s) for which the recipes must be suitable. You can specify multiple with comma meaning AND connection. You can specify multiple diets separated with a pipe | meaning OR connection.
-          schema:
-            type: string
-            example: gluten free,vegetarian
-
-        - name: intolerances
-          in: query
-          description: A comma-separated list of intolerances. All recipes returned must not contain ingredients that are not suitable for people with the intolerances entered.
-          schema:
-            type: string
-            example: gluten
-      responses:
-        200:
-          description: >
-            Successfully returned n numbers of recipes matching the search.If the user is not logged in,
-            then the recipe 'viewed','favorite' attributes will not be included.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SearchResult"
-        400:
-          description: wrong arguments specification.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: There is no matching result for the search.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+  # ========================================
+  # FAMILY RECIPES SECTION
+  # ========================================
+  
   /users/family-recipes:
     get:
       tags:
-        - Users
-      summary: Get all family recipes.
-      description: Return all family recipes.
+        - Family Recipes
+      summary: "Get Family Recipes"
+      description: "Retrieve all family recipes shared with the user"
       responses:
-        200:
-          description: Successfully return family recipes.
+        '200':
+          description: "Family recipes retrieved successfully"
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/FamilyRecipe"
-        401:
-          description: User is not logged in.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                  $ref: '#/components/schemas/FamilyRecipe'
+        '401':
+          description: "User not authenticated"
 
     post:
       tags:
-        - Users
-      summary: Add a family recipe
-      description: Add a family recipe to the system. Now requires detailed ingredients (with amounts and units), step-by-step instructions, and equipment list for preparation functionality.
+        - Family Recipes
+      summary: "Create New Family Recipe"
+      description: "Create a new recipe in the family collection"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FamilyRecipe"
+              $ref: '#/components/schemas/CreateFamilyRecipeRequest'
       responses:
-        201:
-          description: Recipe successfully added to the system
+        '201':
+          description: "Family recipe created successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: Invalid input (e.g., missing required fields like family_member, occasion, ingredients, instructions, equipment)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        401:
-          description: User is not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Family recipe created successfully"
+                  success:
+                    type: boolean
+                    example: true
+                  recipe_id:
+                    type: integer
+                    example: 789
+        '401':
+          description: "User not authenticated"
+
     delete:
       tags:
-        - Users
-      summary: Delete a family recipe
-      description: Delete a family recipe from the system.
+        - Family Recipes
+      summary: "Delete Family Recipe"
+      description: "Delete a family recipe (only if user is the creator)"
       requestBody:
         required: true
         content:
@@ -853,509 +703,585 @@ paths:
               properties:
                 recipe_id:
                   type: integer
-                  description: The unique ID of the family recipe
-              example:
-                recipe_id: 123
-
+                  example: 789
       responses:
-        200:
-          description: Recipe successfully deleted from the system
+        '200':
+          description: "Family recipe deleted successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessMessage"
-        400:
-          description: Invalid input (e.g., missing recipe_id)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: Recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-  
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Family recipe deleted successfully"
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: "User not authenticated"
+        '403':
+          description: "Not authorized to delete this recipe"
+
   /users/family-recipes/{recipe_id}:
     get:
       tags:
-        - Users
-      summary: Get specific family recipe details
-      description: Return details of a specific family recipe created by the user
+        - Family Recipes
+      summary: "Get Family Recipe Details"
+      description: "Get detailed information about a specific family recipe"
       parameters:
         - name: recipe_id
           in: path
           required: true
-          description: ID of the family recipe
+          description: "ID of the family recipe to retrieve"
           schema:
             type: integer
-            example: 1
+            example: 789
+        - name: full
+          in: query
+          required: false
+          description: "Get full recipe details including instructions and equipment"
+          schema:
+            type: string
+            enum: ['true', 'false']
+            default: 'false'
+            example: 'true'
       responses:
-        200:
-          description: Successfully return family recipe details
+        '200':
+          description: "Family recipe details retrieved successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FamilyRecipe"
-        401:
-          description: User is not logged in
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-        404:
-          description: Family recipe not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                $ref: '#/components/schemas/FamilyRecipe'
+        '401':
+          description: "User not authenticated"
+        '404':
+          description: "Family recipe not found"
 
   /users/family-recipes/{recipe_id}/preparation:
     get:
       tags:
-        - Users
-      summary: Get detailed preparation steps for a family recipe
-      description: Returns instructions, equipment, and ingredients grouped by step for family recipes created by the authenticated user
+        - Family Recipes
+      summary: "Get Family Recipe Preparation Steps"
+      description: "Navigate through family recipe preparation with step-by-step instructions"
       parameters:
         - name: recipe_id
           in: path
           required: true
-          description: ID of the family recipe
+          description: "ID of the family recipe"
           schema:
             type: integer
-            example: 1
+            example: 789
+        - name: step
+          in: query
+          required: false
+          description: "Current step number (default: 1)"
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 2
       responses:
         '200':
-          description: Family recipe preparation details returned successfully
+          description: "Family recipe preparation steps retrieved successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecipePreparation"
+                $ref: '#/components/schemas/PreparationSteps'
         '401':
-          description: User is not authorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+          description: "User not authenticated"
         '404':
-          description: Family recipe not found or doesn't belong to user
+          description: "Family recipe not found"
+
+  # ========================================
+  # PUBLIC RECIPES SECTION
+  # ========================================
+  
+  /recipes/random:
+    get:
+      tags:
+        - Public Recipes
+      summary: "Get Random Recipes"
+      description: "Retrieve random recipes from Spoonacular API with optional cache bypass"
+      parameters:
+        - name: number
+          in: query
+          description: "Number of random recipes to return (default: 3)"
+          required: false
+          schema:
+            type: integer
+            default: 3
+            minimum: 1
+            maximum: 10
+            example: 5
+        - name: fresh
+          in: query
+          description: "Bypass cache and get fresh random recipes from API"
+          required: false
+          schema:
+            type: string
+            enum: ['true', 'false']
+            default: 'false'
+            example: 'true'
+      responses:
+        '200':
+          description: "Random recipes retrieved successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+        '500':
+          description: "Failed to fetch random recipes"
 
+  /recipes/search:
+    get:
+      tags:
+        - Public Recipes
+      summary: "Search Recipes"
+      description: "Search for recipes using various filters and criteria"
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: "Search query for recipe names or ingredients"
+          schema:
+            type: string
+            example: "chicken pasta"
+        - name: number
+          in: query
+          required: false
+          description: "Number of results to return"
+          schema:
+            type: integer
+            enum: [5, 10, 15]
+            default: 5
+            example: 10
+        - name: cuisines
+          in: query
+          required: false
+          description: "Filter by cuisine type"
+          schema:
+            type: string
+            example: "Italian"
+        - name: diet
+          in: query
+          required: false
+          description: "Filter by dietary restrictions"
+          schema:
+            type: string
+            example: "vegetarian"
+        - name: intolerances
+          in: query
+          required: false
+          description: "Filter by food intolerances"
+          schema:
+            type: string
+            example: "gluten"
+      responses:
+        '200':
+          description: "Search results retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+        '404':
+          description: "No recipes found matching the criteria"
+
+  /recipes/{recipe_id}:
+    get:
+      tags:
+        - Public Recipes
+      summary: "Get Recipe Details"
+      description: "Get detailed information about a specific public recipe"
+      parameters:
+        - name: recipe_id
+          in: path
+          required: true
+          description: "ID of the recipe to retrieve"
+          schema:
+            type: integer
+            example: 123
+        - name: full
+          in: query
+          required: false
+          description: "Get full recipe details including instructions and equipment"
+          schema:
+            type: string
+            enum: ['true', 'false']
+            default: 'false'
+            example: 'true'
+      responses:
+        '200':
+          description: "Recipe details retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          description: "Recipe not found"
+
+  /recipes/{recipe_id}/preparation:
+    get:
+      tags:
+        - Public Recipes
+      summary: "Get Recipe Preparation Steps"
+      description: "Navigate through recipe preparation with step-by-step instructions"
+      parameters:
+        - name: recipe_id
+          in: path
+          required: true
+          description: "ID of the recipe"
+          schema:
+            type: integer
+            example: 123
+        - name: step
+          in: query
+          required: false
+          description: "Current step number (default: 1)"
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 3
+      responses:
+        '200':
+          description: "Preparation steps retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreparationSteps'
+        '404':
+          description: "Recipe not found"
+
+  # ========================================
+  # COUNTRIES SECTION
+  # ========================================
+  
   /countries:
     get:
       tags:
         - Countries
-      summary: Get list of all countries
-      description: Returns an array of country names.
+      summary: "Get Countries List"
+      description: "Retrieve list of countries for user registration"
       responses:
-        200:
-          description: A JSON array of country names.
+        '200':
+          description: "Countries list retrieved successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Countries"
-        500:
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                type: array
+                items:
+                  type: string
+                  example: "United States"
+
 components:
   schemas:
-    FamilyRecipe:
-      description: family recipe
+    Recipe:
       type: object
-      required:
-        - family_member
-        - occasion
-        - ingredients
-        - instructions
-        - equipment
       properties:
         id:
           type: integer
-          description: family recipe id of the recipe
-          example: 779
-        familyMember:
+          example: 123
+        title:
           type: string
-          description: family member who created the recipe
-          example: Grandma Sarah
-        occasion:
+          example: "Chicken Alfredo Pasta"
+        image:
           type: string
-          description: occasion for which the recipe is suitable
-          example: birthday
+          example: "https://example.com/recipe-image.jpg"
+        readyInMinutes:
+          type: integer
+          example: 30
+        aggregateLikes:
+          type: integer
+          example: 85
+        vegan:
+          type: boolean
+          example: false
+        vegetarian:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        summary:
+          type: string
+          example: "A delicious creamy pasta dish with chicken and alfredo sauce"
+        extendedIngredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+        analyzedInstructions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Instruction'
+        spoonacularScore:
+          type: number
+          format: float
+          example: 85.5
+        liked:
+          type: boolean
+          example: false
+        favorite:
+          type: boolean
+          example: true
+        viewed:
+          type: boolean
+          example: true
+
+    UserRecipe:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        title:
+          type: string
+          example: "Mom's Special Lasagna"
+        image:
+          type: string
+          example: "https://example.com/my-recipe-image.jpg"
+        readyInMinutes:
+          type: integer
+          example: 120
+        aggregateLikes:
+          type: integer
+          example: 0
+        vegan:
+          type: boolean
+          example: false
+        vegetarian:
+          type: boolean
+          example: true
+        glutenFree:
+          type: boolean
+          example: false
+        summary:
+          type: string
+          example: "A family recipe passed down through generations"
         ingredients:
           type: array
           items:
-            type: object
-            required:
-              - name
-              - amount
-              - unit
-            properties:
-              name:
-                type: string
-                example: carrot
-                description: Name of the ingredient
-              amount:
-                type: number
-                example: 3
-                description: The quantity of the ingredient
-              unit:
-                type: string
-                example: large
-                description: The unit of the quantity for the ingredient
-              description:
-                type: string
-                example: washed and chopped
-                description: Additional description of the ingredient
+            type: string
+            example: "2 cups ricotta cheese"
         instructions:
           type: array
           items:
             type: string
-            example: Drain the eggs, return them to the pan and shake the pan to crack the shells all over.
-        equipment:
-          type: array
-          items:
-            type: string
-            example: sauce pan
-            description: Required equipment for the recipe
-        image:
-          type: string
-          description: recipe image
-          format: URL
-          example: https://spoonacular.com/recipeimages/655455-566x370.jpg
-    RecipePreview:
-      description: Model containing only the recipe preview
+            example: "Preheat oven to 375°F"
+
+    FamilyRecipe:
       type: object
-      required:
-        - recipe_id
-        - title
-        - image
-        - readyInMinutes
-        - aggregateLikes
-        - vegan
-        - vegetarian
-        - glutenFree
-      properties:
-        recipe_id:
-          type: integer
-          description: id of the recipe
-          exampe: 779
-        title:
-          type: string
-          description: recipe title name
-          example: Baba Ganush
-        image:
-          type: string
-          description: recipe image
-          format: URL
-          example: https://spoonacular.com/recipeimages/655455-566x370.jpg
-        readyInMinutes:
-          type: integer
-          description: the time in minutes that takes to make the recipe
-          example: 20
-        aggregateLikes:
-          type: integer
-          description: amout of like the recipe got
-          example: 7
-        vegan:
-          type: boolean
-          description: does the recipe is vegan
-          examle: true
-        vegetarian:
-          type: boolean
-          description: does the recipe is vegetarian
-          examle: true
-        glutenFree:
-          type: boolean
-          description: does the recipe is vegetrian
-          examle: true
-        viewed:
-          type: boolean
-          description: does the recipe was viewed by the user
-          examle: true
-        favorite:
-          type: boolean
-          description: does the recipe in the user favorites list.
-          examle: true
-
-    LoginUser:
-      type: object
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 8
-          description: username contains 3 to 8 letters only
-          example: IlayGav
-
-        password:
-          type: string
-          minLength: 5
-          maxLength: 10
-          format: password
-          description: >
-            user's passwords contains betweeb 5 to 10 chars,
-            contains at least one number and special char
-          example: il@1gav
-
-    RegisterUser:
-      type: object
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 8
-          description: username contains 3 to 8 letters only
-          example: IlayGav
-        firstname:
-          type: string
-          description: user's first name
-          example: Ilay
-        lastname:
-          type: string
-          description: user's last name
-          example: Gavrilenko
-        country:
-          type: string
-          description: user's country
-          example: Norway
-        password:
-          type: string
-          minLength: 5
-          maxLength: 10
-          format: password
-          description: >
-            user's passwords contains betweeb 5 to 20 chars,
-            contains at least one number and special char
-          example: il@1gav
-        email:
-          type: string
-          format: email
-          description: user's email
-          example: ilgavC@gmail.com
-        profilePic:
-          type: string
-          format: uri
-          description: Optional URL for user profile picture
-          example: https://www.example.com/default-profile.png
-
-    UserDetails:
-      type: string
-      properties:
-        firstname:
-          type: string
-          description: user's first name
-          example: Ilay
-        lastname:
-          type: string
-          description: user's last name
-          example: Gavrilenko
-    SearchResult:
-      allOf:
-        - $ref: "#/components/schemas/RecipePreview"
-        - type: object
-          properties:
-            instructions:
-              type: array
-              items:
-                type: string
-                example: Drain the eggs, return them to the pan and shake the pan to crack the shells all over.
-                description: instructions steps for the recipe, ordered from step 1 (array[0]) to the last step (array[array.length -1]).
-    FullRecipe:
-      allOf:
-        - $ref: "#/components/schemas/RecipePreview"
-        - type: object
-          properties:
-            ingredients:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    example: carrot
-                    description: Name of the ingredient.
-
-                  amount:
-                    type: integer
-                    example: 3
-                    description: The quantity of the ingredient.
-
-                  unit:
-                    type: string
-                    example: large
-                    description: The unit of the quantity for the ingredient.
-
-                  description:
-                    type: string
-                    example: 3 large washed and chopped carrot.
-                    description: a brief description of how to use the ingredient.
-
-            instructions:
-              type: array
-              items:
-                type: string
-                example: Drain the eggs, return them to the pan and shake the pan to crack the shells all over.
-                description: instructions steps for the recipe, ordered from step 1 (array[0]) to the last step (array[array.length -1]).
-
-            numberOfPortions:
-              type: integer
-              description: Number of serving portions for the recipe.
-              example: 4
-
-            equipment:
-              type: array
-              items:
-                type: string
-                example: sauce pan
-                description: array of all the required equipment for the recipe.
-            summary:
-              type: string
-              example:
-                Hazelnut Truffles is a hor doeuvre that serves 15. One portion of this dish contains around 2g of protein,
-                6g of fat, and a total of 72 calories. For 32 cents per serving, this recipe covers 3% of your daily requirements of
-                vitamins and minerals. It is a good option if youre following
-                a gluten free and lacto ovo vegetarian diet.
-              description: Brief summary of the recipe with some additional information on the recipe.
-    Countries:
-      type: array
-      items:
-        type: string
-        example: Norway,Egypt
-        description: List of country names.
-    ErrorMessage:
-      type: object
-      properties:
-        message:
-          type: string
-          example: error message
-        error:
-          type: boolean
-          example: false
-
-    SuccessMessage:
-      type: object
-      properties:
-        message:
-          type: string
-          example: success message
-        success:
-          type: boolean
-          example: true
-    RecipePreparation:
-      type: object
-      required:
-        - id
-        - title
-        - preparationSteps
       properties:
         id:
           type: integer
+          example: 789
         title:
           type: string
-        image:
-          type: string
-          format: uri
-        numberOfPortions:
+          example: "Grandma's Apple Pie"
+        readyInMinutes:
           type: integer
-        preparationSteps:
+          example: 90
+        familyMember:
+          type: string
+          example: "Grandma Rose"
+        occasion:
+          type: string
+          example: "Thanksgiving"
+        ingredients:
+          type: array
+          items:
+            type: string
+            example: "6 large apples, peeled and sliced"
+        instructions:
+          type: array
+          items:
+            type: string
+            example: "Roll out pie crust and place in pie dish"
+
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 11124
+        name:
+          type: string
+          example: "carrots"
+        amount:
+          type: number
+          example: 2
+        unit:
+          type: string
+          example: "large"
+        original:
+          type: string
+          example: "2 large carrots, diced"
+
+    Instruction:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Preparation"
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+
+    Step:
+      type: object
+      properties:
+        number:
+          type: integer
+          example: 1
+        step:
+          type: string
+          example: "Heat oil in a large skillet over medium heat"
+        ingredients:
           type: array
           items:
             type: object
-            required:
-              - stepNumber
-              - instruction
-              - equipment
-              - ingredients
             properties:
-              stepNumber:
+              id:
                 type: integer
-              instruction:
+                example: 4582
+              name:
                 type: string
-              equipment:
-                type: array
-                items:
-                  type: string
-              ingredients:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - name
-                    - amount
-                    - unit
-                  properties:
-                    name:
-                      type: string
-                    amount:
-                      type: number
-                    unit:
-                      type: string
-                    description:
-                      type: string
-      example:
-        id: 101
-        title: "Roasted Carrot Soup"
-        image: "https://example.com/images/roasted-carrot-soup.jpg"
-        numberOfPortions: 4
-        preparationSteps:
-          - stepNumber: 1
-            instruction: "Preheat the oven to 200°C (400°F)."
-            equipment:
-              - "oven"
-            ingredients: []
-          - stepNumber: 2
-            instruction: "Peel and chop carrots into 2cm pieces."
-            equipment:
-              - "knife"
-              - "cutting board"
+                example: "cooking oil"
+        equipment:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 404645
+              name:
+                type: string
+                example: "frying pan"
+
+    CreateRecipeRequest:
+      type: object
+      required:
+        - title
+        - readyInMinutes
+        - image
+        - vegan
+        - vegetarian
+        - glutenFree
+        - summary
+        - ingredients
+        - instructions
+      properties:
+        title:
+          type: string
+          example: "My Special Pasta"
+        readyInMinutes:
+          type: integer
+          example: 45
+        image:
+          type: string
+          example: "https://example.com/my-pasta.jpg"
+        vegan:
+          type: boolean
+          example: false
+        vegetarian:
+          type: boolean
+          example: true
+        glutenFree:
+          type: boolean
+          example: false
+        summary:
+          type: string
+          example: "A delicious homemade pasta recipe"
+        ingredients:
+          type: array
+          items:
+            type: string
+            example: "500g pasta"
+        instructions:
+          type: array
+          items:
+            type: string
+            example: "Boil water in a large pot"
+
+    CreateFamilyRecipeRequest:
+      type: object
+      required:
+        - title
+        - readyInMinutes
+        - familyMember
+        - occasion
+        - ingredients
+        - instructions
+      properties:
+        title:
+          type: string
+          example: "Uncle Bob's BBQ Ribs"
+        readyInMinutes:
+          type: integer
+          example: 180
+        familyMember:
+          type: string
+          example: "Uncle Bob"
+        occasion:
+          type: string
+          example: "Summer BBQ"
+        ingredients:
+          type: array
+          items:
+            type: string
+            example: "2 racks of baby back ribs"
+        instructions:
+          type: array
+          items:
+            type: string
+            example: "Season ribs with dry rub and let sit for 2 hours"
+
+    PreparationSteps:
+      type: object
+      properties:
+        currentStep:
+          type: integer
+          example: 2
+        totalSteps:
+          type: integer
+          example: 8
+        step:
+          type: object
+          properties:
+            number:
+              type: integer
+              example: 2
+            instruction:
+              type: string
+              example: "Add chopped onions and cook until translucent"
             ingredients:
-              - name: "carrot"
-                amount: 800
-                unit: "g"
-                description: "washed and peeled"
-          - stepNumber: 3
-            instruction: "Toss chopped carrots with olive oil, salt, and pepper; spread on a baking sheet."
+              type: array
+              items:
+                type: string
+                example: "1 medium onion, chopped"
             equipment:
-              - "baking sheet"
-            ingredients:
-              - name: "olive oil"
-                amount: 2
-                unit: "tbsp"
-                description: "extra virgin"
-              - name: "salt"
-                amount: 1
-                unit: "tsp"
-                description: "sea salt"
-              - name: "black pepper"
-                amount: 0.5
-                unit: "tsp"
-                description: "freshly ground"
-          - stepNumber: 4
-            instruction: "Roast carrots in the oven for 25 minutes until tender and caramelized."
-            equipment:
-              - "oven"
-              - "baking sheet"
-            ingredients: []
-          - stepNumber: 5
-            instruction: "Blend roasted carrots with vegetable stock until smooth; season to taste and serve hot."
-            equipment:
-              - "blender"
-              - "saucepan"
-            ingredients:
-              - name: "vegetable stock"
-                amount: 500
-                unit: "ml"
-                description: "warm"
-        # Example for a family recipe preparation:
-        # id: 201  
-        # title: "Grandma Sarah's Birthday Cake"
-        # image: "https://example.com/images/birthday-cake.jpg"
-        # numberOfPortions: 1
-        # preparationSteps: [...]
+              type: array
+              items:
+                type: string
+                example: "cutting board"
+        navigation:
+          type: object
+          properties:
+            hasPrevious:
+              type: boolean
+              example: true
+            hasNext:
+              type: boolean
+              example: true
+            previousStep:
+              type: integer
+              example: 1
+            nextStep:
+              type: integer
+              example: 3
