@@ -18,7 +18,8 @@ async function parseNumberParam(param, defaultValue = 3) {
 router.get("/random", async (req, res, next) => {
   try {
     const number = await parseNumberParam(req.query.number);
-    let recipes = await recipes_utils.getRandomRecipeDetails(number);
+    const fresh = req.query.fresh === "true"; // Check for fresh parameter
+    let recipes = await recipes_utils.getRandomRecipeDetails(number, fresh);
     recipes = await recipes_utils.enrichRecipesWithUserInfo(
       req.session.user_id,
       recipes

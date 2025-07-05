@@ -207,7 +207,7 @@ paths:
       tags:
         - Recipes
       summary: Get n numbers of random recipes.
-      description: Return n numbers of random recipes(default n=3). minimum value is 1 and maximum value is 10.
+      description: Return n numbers of random recipes(default n=3). minimum value is 1 and maximum value is 10. Use the 'fresh' parameter to bypass caching and get truly new random recipes.
       parameters:
         - name: number
           in: query
@@ -218,6 +218,14 @@ paths:
             minimum: 1
             maximum: 10
             example: 3
+        - name: fresh
+          in: query
+          required: false
+          description: Set to 'true' to bypass cache and fetch new random recipes from the API. When 'false' or omitted, may return cached results for better performance.
+          schema:
+            type: string
+            enum: ['true', 'false']
+            example: 'true'
 
       responses:
         200:

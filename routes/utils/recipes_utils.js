@@ -91,9 +91,10 @@ async function getFullRecipeDetails(recipe_id) {
   };
 }
 
-async function getRandomRecipeDetails(number = 3) {
-  // Use cached random recipes if available and fresh
+async function getRandomRecipeDetails(number = 3, forceFresh = false) {
+  // Use cached random recipes if available and fresh (unless forceFresh is true)
   if (
+    !forceFresh &&
     randomRecipeCache &&
     Date.now() - randomCacheTimestamp < RANDOM_CACHE_DURATION
   ) {
