@@ -6,6 +6,16 @@ const bcrypt = require("bcrypt");
 
 router.post("/register", async (req, res, next) => {
   try {
+    // Debug: Log what we received
+    console.log("=== REGISTER DEBUG ===");
+    console.log("Request body:", {
+      ...req.body,
+      password: req.body.password ? '***' : undefined,
+      confirmedPassword: req.body.confirmedPassword ? '***' : undefined
+    });
+    console.log("Keys in request body:", Object.keys(req.body));
+    console.log("=====================");
+
     // collect user details, including optional profilePic
     let user_details = {
       username: req.body.username,
@@ -18,8 +28,18 @@ router.post("/register", async (req, res, next) => {
       profilePic: req.body.profilePic, // optional URL
     };
 
+    console.log("User details object:", {
+      ...user_details,
+      password: user_details.password ? '***' : undefined,
+      confirmedPassword: user_details.confirmedPassword ? '***' : undefined
+    });
+
     // Validate that passwords match
     if (user_details.password !== user_details.confirmedPassword) {
+      console.log("Password validation failed:", {
+        password: user_details.password ? '***' : 'MISSING',
+        confirmedPassword: user_details.confirmedPassword ? '***' : 'MISSING'
+      });
       throw { status: 400, message: "Passwords do not match" };
     }
 
