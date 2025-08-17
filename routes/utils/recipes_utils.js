@@ -9,6 +9,29 @@ let randomRecipeCache = null;
 let randomCacheTimestamp = 0;
 const RANDOM_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+function fixImageUrl(imageUrl) {
+  if (!imageUrl || !imageUrl.includes("img.spoonacular.com")) {
+    return imageUrl;
+  }
+
+  // Remove trailing dot if it exists
+  let cleanUrl = imageUrl.replace(/\.$/, "");
+
+  // Check if URL has a proper image extension
+  const urlParts = cleanUrl.split(".");
+  const lastPart = urlParts[urlParts.length - 1];
+
+  // If no extension or not an image extension, add .jpg
+  if (
+    urlParts.length === 1 ||
+    !lastPart.match(/^(jpg|jpeg|png|gif|webp)(\?.*)?$/i)
+  ) {
+    return cleanUrl + ".jpg";
+  }
+
+  return cleanUrl;
+}
+
 async function getRecipeInformation(recipe_id) {
   const cacheKey = `recipe_${recipe_id}`;
   const cached = recipeCache.get(cacheKey);
@@ -20,6 +43,16 @@ async function getRecipeInformation(recipe_id) {
   const response = await axios.get(`${api_domain}/${recipe_id}/information`, {
     params: { includeNutrition: false, apiKey: process.env.spoonacular_apiKey },
   });
+
+  // Fix the image URL if needed
+  response.data.image = fixImageUrl(response.data.image);
+
+  console.log(
+    "Fixed image URL for recipe",
+    recipe_id,
+    ":",
+    response.data.image
+  );
 
   // Cache the result
   recipeCache.set(cacheKey, {
@@ -109,7 +142,7 @@ async function getRandomRecipeDetails(number = 3, forceFresh = false) {
     id: r.id,
     title: r.title,
     readyInMinutes: r.readyInMinutes,
-    image: r.image,
+    image: fixImageUrl(r.image), // Apply fix here too
     spoonacularScore: r.spoonacularScore,
     vegan: r.vegan,
     vegetarian: r.vegetarian,
@@ -137,7 +170,7 @@ async function getSearchRecipeDetails(params = {}, numberOfResults = 5) {
     id: recipe.id,
     title: recipe.title,
     readyInMinutes: recipe.readyInMinutes,
-    image: recipe.image,
+    image: fixImageUrl(recipe.image), // Apply fix here too
     spoonacularScore: recipe.spoonacularScore,
     vegan: recipe.vegan,
     vegetarian: recipe.vegetarian,
@@ -162,7 +195,7 @@ async function getRecipesDetails(recipesIdList = []) {
       id: recipe.id,
       title: recipe.title,
       readyInMinutes: recipe.readyInMinutes,
-      image: recipe.image,
+      image: fixImageUrl(recipe.image), // Add this fix!
       spoonacularScore: recipe.spoonacularScore,
       vegan: recipe.vegan,
       vegetarian: recipe.vegetarian,
